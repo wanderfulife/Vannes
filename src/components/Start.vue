@@ -293,6 +293,7 @@ body {
 
 .content-container {
 	flex-grow: 1;
+	/* This allows the content to take up available space */
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -301,6 +302,8 @@ body {
 	max-width: 600px;
 	margin: 0 auto;
 	box-sizing: border-box;
+	overflow-y: auto;
+	/* Allow scrolling if content overflows */
 }
 
 .question-container {
@@ -376,6 +379,8 @@ h2 {
 	text-align: center;
 	width: 100%;
 	box-sizing: border-box;
+	position: relative;
+	/* Keep the footer relative to its parent */
 }
 
 .btn-download {
