@@ -1,11 +1,16 @@
 <template>
 	<div class="app-container">
+		<!-- Progress Bar -->
+		<div v-if="currentStep === 'survey'" class="progress-bar">
+			<div class="progress" :style="{ width: `${progress}%` }"></div>
+		</div>
+
 		<div class="content-container">
 			<!-- Enqueteur Input Step -->
 			<div v-if="currentStep === 'enqueteur'">
 				<h2>Prénom enqueteur :</h2>
 				<input class="form-control" type="text" v-model="enqueteur" />
-				<button v-if="enqueteur" @click="setEnqueteur" class="btn-next">Suivant</button>
+				<button v-if="enqueteur && !isEnqueteurSaved" @click="setEnqueteur" class="btn-next">Suivant</button>
 			</div>
 
 			<!-- Start Survey Step -->
@@ -14,8 +19,8 @@
 			</div>
 
 			<!-- Survey Questions Step -->
-			<div v-else-if="currentStep === 'survey'">
-				<div v-if="!isSurveyComplete" class="question-container">
+			<div v-else-if="currentStep === 'survey' && !isSurveyComplete">
+				<div class="question-container">
 					<h2>{{ currentQuestion.text }}</h2>
 					<!-- Multiple Choice Questions -->
 					<div v-if="!currentQuestion.freeText">
@@ -36,11 +41,12 @@
 					<!-- Back Button -->
 					<button @click="previousQuestion" class="btn-return" v-if="canGoBack">Retour</button>
 				</div>
-				<!-- Survey Complete Message -->
-				<div v-if="isSurveyComplete" class="survey-complete">
-					<h2>Merci pour votre réponse et bon voyage.</h2>
-					<button @click="finishSurvey" class="btn-next">Finir questionnaire</button>
-				</div>
+			</div>
+
+			<!-- Survey Complete Step -->
+			<div v-else-if="isSurveyComplete" class="survey-complete">
+				<h2>Merci pour votre réponse et bon voyage.</h2>
+				<button @click="resetSurvey" class="btn-next">Nouveau questionnaire</button>
 			</div>
 
 			<!-- Logo -->
@@ -62,6 +68,7 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { questions } from './surveyQuestions.js';
 
+// Reactive variables
 const docCount = ref(0);
 const surveyCollectionRef = collection(db, "Vannes");
 const currentStep = ref('enqueteur');
@@ -71,23 +78,39 @@ const currentQuestionIndex = ref(0);
 const answers = ref({});
 const freeTextAnswer = ref('');
 const questionPath = ref(['Q1']);
+const isEnqueteurSaved = ref(false);
+const isSurveyComplete = ref(false);
 
+// Computed properties
 const currentQuestion = computed(() => questions[currentQuestionIndex.value]);
 const canGoBack = computed(() => questionPath.value.length > 1);
 const isLastQuestion = computed(() => currentQuestionIndex.value === questions.length - 1);
-const isSurveyComplete = computed(() => {
-	return currentQuestionIndex.value === questions.length - 1 && answers.value[currentQuestion.value.id] !== undefined;
-});
-const canProceed = computed(() => {
-	if (currentQuestion.value.freeText) {
-		return freeTextAnswer.value.trim() !== '';
+
+// Progress Bar
+const progress = computed(() => {
+	if (currentStep.value !== 'survey') return 0;
+	if (isSurveyComplete.value) return 100;
+
+	const totalQuestions = questions.length;
+	const currentQuestionNumber = currentQuestionIndex.value + 1;
+
+	// Check if the current question is the last one or if it leads to the end
+	const isLastOrEnding = isLastQuestion.value ||
+		(currentQuestion.value.options &&
+			currentQuestion.value.options.some(option => option.next === 'end'));
+
+	if (isLastOrEnding) {
+		return 100;
 	}
-	return answers.value[currentQuestion.value.id] !== undefined;
+
+	return Math.min(Math.round((currentQuestionNumber / totalQuestions) * 100), 99);
 });
 
+// Methods
 const setEnqueteur = () => {
 	if (enqueteur.value.trim() !== '') {
 		currentStep.value = 'start';
+		isEnqueteurSaved.value = true;
 	}
 };
 
@@ -96,21 +119,26 @@ const startSurvey = () => {
 	currentStep.value = 'survey';
 	currentQuestionIndex.value = 0;
 	answers.value = {};
+	isSurveyComplete.value = false;
+};
+
+const selectAnswer = (option) => {
+	answers.value[currentQuestion.value.id] = option.text;
+	if (option.next === 'end') {
+		finishSurvey();
+	} else if (option.requiresPrecision) {
+		nextQuestion(option.next);
+	} else {
+		nextQuestion();
+	}
 };
 
 const handleFreeTextAnswer = () => {
 	answers.value[currentQuestion.value.id] = freeTextAnswer.value;
 	if (currentQuestionIndex.value < questions.length - 1) {
 		nextQuestion();
-	}
-	// If it's the last question, we don't call nextQuestion()
-};
-const selectAnswer = (option) => {
-	answers.value[currentQuestion.value.id] = option.text;
-	if (option.requiresPrecision) {
-		nextQuestion(option.next);
 	} else {
-		nextQuestion();
+		finishSurvey();
 	}
 };
 
@@ -125,7 +153,7 @@ const nextQuestion = (forcedNextId = null) => {
 	}
 
 	if (nextQuestionId === 'end') {
-		// Do nothing, wait for user to click "Finir questionnaire"
+		finishSurvey();
 	} else if (nextQuestionId) {
 		const nextIndex = questions.findIndex(q => q.id === nextQuestionId);
 		if (nextIndex !== -1) {
@@ -156,6 +184,7 @@ const previousQuestion = () => {
 };
 
 const finishSurvey = async () => {
+	isSurveyComplete.value = true;
 	const now = new Date();
 	await addDoc(surveyCollectionRef, {
 		HEURE_DEBUT: startDate.value,
@@ -166,14 +195,17 @@ const finishSurvey = async () => {
 		...answers.value
 	});
 
+	await getDocCount();
+};
+
+const resetSurvey = () => {
 	currentStep.value = 'start';
 	startDate.value = "";
 	answers.value = {};
 	currentQuestionIndex.value = 0;
 	questionPath.value = ['Q1'];
 	freeTextAnswer.value = '';
-
-	await getDocCount();
+	isSurveyComplete.value = false;
 };
 
 const getDocCount = async () => {
@@ -345,6 +377,20 @@ h2 {
 .doc-count {
 	font-size: 14px;
 	opacity: 0.9;
+}
+
+.progress-bar {
+	width: 100%;
+	height: 10px;
+	background-color: #e0e0e0;
+	position: relative;
+	overflow: hidden;
+}
+
+.progress {
+	height: 100%;
+	background-color: #4caf50;
+	transition: width 0.3s ease-in-out;
 }
 
 @media screen and (max-width: 768px) {
