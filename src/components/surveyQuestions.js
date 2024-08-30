@@ -14,7 +14,7 @@ export const questions = [
 	},
 	{
 		id: "Q2",
-		text: "Quelle est l'origine de votre déplacement ? (D'où êtes-vous parti pour arriver à la gare ?)",
+		text: "Quelle est l'origine de votre déplacement ?       (D'où êtes-vous parti pour arriver à la gare ?)",
 		options: [
 			{ text: "Vannes", next: "Q2a" },
 			{ text: "Autre commune", next: "Q2_precision", requiresPrecision: true },

@@ -281,9 +281,9 @@ body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 5% 20px;
-	width: 100%;
-	max-width: 800px;
+	padding: 5% 0;
+	width: 90%;
+	max-width: 600px;
 	margin: 0 auto;
 	box-sizing: border-box;
 }
@@ -291,15 +291,12 @@ body {
 .question-container {
 	width: 100%;
 	margin-bottom: 30px;
-	/* Add space below the question and options */
 }
 
 
 h2 {
-	color: white;
-	font-size: 1.2rem;
-	margin-bottom: 15px;
 	text-align: center;
+	width: 100%;
 }
 
 .form-control {
@@ -320,7 +317,6 @@ h2 {
 	width: 100%;
 	max-width: 400px;
 	color: white;
-	background-color: grey;
 	padding: 15px;
 	margin-top: 10px;
 	border: none;
@@ -334,21 +330,20 @@ h2 {
 }
 
 .btn-return {
+	background-color: grey;
 	margin-top: 30px;
-	/* Increased space above the Return button */
+}
+
+.btn-option {
+	background-color: #4a5a83;
+	text-align: left;
 }
 
 .logo {
 	max-width: 20%;
 	height: auto;
 	margin-top: 40px;
-	/* Increased space above the logo */
 	margin-bottom: 20px;
-}
-
-.btn-option {
-	background-color: #4a5a83;
-	text-align: left;
 }
 
 .footer {
@@ -385,6 +380,7 @@ h2 {
 	background-color: #e0e0e0;
 	position: relative;
 	overflow: hidden;
+	margin-bottom: 20px;
 }
 
 .progress {
@@ -396,7 +392,6 @@ h2 {
 @media screen and (max-width: 768px) {
 	.question-container {
 		margin-bottom: 20px;
-		/* Slightly less space on smaller screens */
 	}
 
 	.btn-return {
@@ -409,9 +404,13 @@ h2 {
 }
 
 @media screen and (max-width: 480px) {
+	.content-container {
+		width: 95%;
+		padding: 5% 10px;
+	}
+
 	.question-container {
 		margin-bottom: 15px;
-		/* Even less space on very small screens */
 	}
 
 	.btn-return {
@@ -421,5 +420,16 @@ h2 {
 	.logo {
 		margin-top: 25px;
 	}
+
+		.form-control,
+		.btn-next,
+		.btn-return,
+		.btn-option {
+			width: 100%;
+			max-width: 400px;
+			margin-left: auto;
+			margin-right: auto;
+			display: block;
+		}
 }
 </style>
