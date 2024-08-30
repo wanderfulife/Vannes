@@ -186,10 +186,12 @@ onMounted(() => {
 
 
 <style>
+/* Base styles */
 body {
 	background-color: #2a3b63;
 	margin: 0;
 	padding: 0;
+	font-family: Arial, sans-serif;
 }
 
 .app-container {
@@ -205,16 +207,34 @@ body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 5% 0;
+	padding: 5% 20px;
 	width: 100%;
+	max-width: 800px;
+	margin: 0 auto;
+	box-sizing: border-box;
 }
 
 .logo {
+	max-width: 100%;
+	height: auto;
 	margin-top: auto;
-	height: 3em;
+	margin-bottom: 20px;
 }
 
 h2 {
+	color: white;
+	font-size: 1.2rem;
+	margin-bottom: 15px;
+	text-align: center;
+}
+
+.form-control {
+	width: 100%;
+	max-width: 400px;
+	padding: 10px;
+	border-radius: 5px;
+	border: 1px solid white;
+	background-color: #333;
 	color: white;
 	font-size: 16px;
 	margin-bottom: 15px;
@@ -224,9 +244,10 @@ h2 {
 .btn-return,
 .btn-option {
 	width: 100%;
+	max-width: 400px;
 	color: white;
-	padding: 20px;
-	margin-top: 20px;
+	padding: 15px;
+	margin-top: 10px;
 	border: none;
 	border-radius: 5px;
 	cursor: pointer;
@@ -246,23 +267,12 @@ h2 {
 	text-align: left;
 }
 
-.form-control {
-	width: 100%;
-	max-width: 600px;
-	padding: 10px;
-	border-radius: 5px;
-	border: 1px solid white;
-	background-color: #333;
-	color: white;
-	font-size: 16px;
-}
-
 .footer {
 	background: linear-gradient(to right, #4c4faf, #3f51b5);
-	padding: 20px 0;
+	padding: 20px;
 	text-align: center;
 	width: 100%;
-	box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+	box-sizing: border-box;
 }
 
 .btn-download {
@@ -278,20 +288,72 @@ h2 {
 	margin-bottom: 15px;
 	text-transform: uppercase;
 	letter-spacing: 1px;
-	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.btn-download:hover {
-	background-color: #e0e0e0;
-	transform: translateY(-2px);
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .doc-count {
 	font-size: 14px;
-	color: #ffffff;
 	opacity: 0.9;
-	font-weight: 300;
-	letter-spacing: 0.5px;
+}
+
+/* Media Queries for Responsiveness */
+@media screen and (max-width: 768px) {
+	.content-container {
+		padding: 5% 10px;
+	}
+
+	h2 {
+		font-size: 1rem;
+	}
+
+	.btn-next,
+	.btn-return,
+	.btn-option,
+	.form-control {
+		font-size: 14px;
+	}
+
+	.footer {
+		padding: 15px;
+	}
+
+	.btn-download {
+		font-size: 14px;
+		padding: 8px 16px;
+	}
+
+	.doc-count {
+		font-size: 12px;
+	}
+}
+
+@media screen and (max-width: 480px) {
+	.content-container {
+		padding: 5% 5px;
+	}
+
+	h2 {
+		font-size: 0.9rem;
+	}
+
+	.btn-next,
+	.btn-return,
+	.btn-option,
+	.form-control {
+		font-size: 12px;
+		padding: 12px;
+	}
+
+	.footer {
+		padding: 10px;
+	}
+
+	.btn-download {
+		font-size: 12px;
+		padding: 6px 12px;
+	}
+
+	.doc-count {
+		font-size: 10px;
+	}
 }
 </style>
