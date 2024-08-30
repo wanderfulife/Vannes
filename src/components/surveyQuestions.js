@@ -14,11 +14,17 @@ export const questions = [
 	},
 	{
 		id: "Q2",
-		text: "Quelle est l'origine de votre déplacement ?",
+		text: "Quelle est l'origine de votre déplacement ? (D'où êtes-vous parti pour arriver à la gare ?)",
 		options: [
 			{ text: "Vannes", next: "Q2a" },
-			{ text: "Autre commune", next: "Q3" },
+			{ text: "Autre commune", next: "Q2_precision", requiresPrecision: true },
 		],
+	},
+	{
+		id: "Q2_precision",
+		text: "Préciser le nom de la commune :",
+		freeText: true,
+		next: "Q3",
 	},
 	{
 		id: "Q2a",
@@ -32,16 +38,32 @@ export const questions = [
 		text: "Quel mode de transport avez-vous utilisé pour vous rendre à la gare ?",
 		options: [
 			{ text: "A pied", next: "Q4" },
-			{ text: "En voiture -- en tant que conducteur", next: "Q3a" },
-			{ text: "En voiture -- en tant que passager", next: "Q3b" },
-			{ text: "En bus/car", next: "Q3c" },
-			{ text: "A vélo", next: "Q3d" },
-			{ text: "A vélo à assistance électrique (VAE)", next: "Q3d" },
-			{ text: "En trottinette", next: "Q3d" },
+			{
+				text: "En voiture -- en tant que conducteur",
+				next: "Q3a",
+				requiresPrecision: true,
+			},
+			{
+				text: "En voiture -- en tant que passager",
+				next: "Q3b",
+				requiresPrecision: true,
+			},
+			{ text: "En bus/car", next: "Q3c", requiresPrecision: true },
+			{ text: "A vélo", next: "Q3d", requiresPrecision: true },
+			{
+				text: "A vélo à assistance électrique (VAE)",
+				next: "Q3d",
+				requiresPrecision: true,
+			},
+			{ text: "En trottinette", next: "Q3d", requiresPrecision: true },
 			{ text: "En Taxi/VTC", next: "Q4" },
-			{ text: "En 2 roues Motorisé (Moto, scooter...)", next: "Q3a" },
+			{
+				text: "En 2 roues Motorisé (Moto, scooter...)",
+				next: "Q3a",
+				requiresPrecision: true,
+			},
 			{ text: "En train - je fais une correspondance", next: "Q4" },
-			{ text: "Autre", next: "Q4", freeText: true },
+			{ text: "Autre", next: "Q3_autre", requiresPrecision: true },
 		],
 	},
 	{
@@ -61,7 +83,7 @@ export const questions = [
 			{
 				text: "Dans un autre parking au sud de la gare",
 				next: "Q3a_prime",
-				freeText: true,
+				requiresPrecision: true,
 			},
 			{
 				text: "Sur une autre place en voirie au nord de la gare",
@@ -70,7 +92,7 @@ export const questions = [
 			{
 				text: "Dans un autre parking au nord de la gare",
 				next: "Q3a_prime",
-				freeText: true,
+				requiresPrecision: true,
 			},
 			{
 				text: "Sur un stationnement privé (box ou place de parking privée)",
@@ -82,7 +104,7 @@ export const questions = [
 		id: "Q3a_prime",
 		text: "Disposez-vous d'un abonnement ou d'un tarif préférentiel pour le stationnement ?",
 		options: [
-			{ text: "Oui", next: "Q4", freeText: true },
+			{ text: "Oui", next: "Q4", requiresPrecision: true },
 			{ text: "Non", next: "Q4" },
 		],
 	},
@@ -104,7 +126,7 @@ export const questions = [
 				text: "Au niveau du giratoire Georges Cadoret devant l'hôpital Chubert",
 				next: "Q4",
 			},
-			{ text: "Autre", next: "Q4", freeText: true },
+			{ text: "Autre", next: "Q4", requiresPrecision: true },
 		],
 	},
 	{
@@ -130,7 +152,7 @@ export const questions = [
 			{ text: "Ligne BZ09", next: "Q4" },
 			{ text: "Ligne BZ11", next: "Q4" },
 			{ text: "Car scolaire", next: "Q4" },
-			{ text: "Autre", next: "Q4", freeText: true },
+			{ text: "Autre", next: "Q4", requiresPrecision: true },
 		],
 	},
 	{
@@ -146,8 +168,14 @@ export const questions = [
 				next: "Q4",
 			},
 			{ text: "Je le transporte avec moi dans le train", next: "Q4" },
-			{ text: "Autre", next: "Q4", freeText: true },
+			{ text: "Autre", next: "Q4", requiresPrecision: true },
 		],
+	},
+	{
+		id: "Q3_autre",
+		text: "Précisez le mode de transport utilisé :",
+		freeText: true,
+		next: "Q4",
 	},
 	{
 		id: "Q4",

@@ -11,8 +11,8 @@
 				<button @click="startSurvey" class="btn-next">COMMENCER QUESTIONNAIRE</button>
 			</div>
 
-			<div v-if="currentStep === 'survey'">
-				<div v-if="currentQuestion" class="question-container">
+			<div v-else-if="currentStep === 'survey'">
+				<div class="question-container">
 					<h2>{{ currentQuestion.text }}</h2>
 					<div v-if="!currentQuestion.freeText">
 						<div v-for="(option, index) in currentQuestion.options" :key="index">
@@ -67,35 +67,44 @@ const setEnqueteur = () => {
 };
 
 const selectAnswer = (option) => {
-	if (currentQuestion.value.freeText) {
-		// For free text questions, we don't immediately go to the next question
-		answers.value[currentQuestion.value.id] = freeTextAnswer.value;
+	answers.value[currentQuestion.value.id] = option.text;
+	if (option.requiresPrecision) {
+		// If precision is required, move to the precision question
+		nextQuestion(option.next);
 	} else {
-		answers.value[currentQuestion.value.id] = option.text;
 		nextQuestion();
 	}
 };
 
-const nextQuestion = () => {
+
+const nextQuestion = (forcedNextId = null) => {
 	if (currentQuestion.value.freeText) {
 		answers.value[currentQuestion.value.id] = freeTextAnswer.value;
 	}
 
-	const nextQuestionId = currentQuestion.value.freeText
-		? currentQuestion.value.next
-		: currentQuestion.value.options.find(opt => opt.text === answers.value[currentQuestion.value.id])?.next;
+	let nextQuestionId = forcedNextId;
+	if (!nextQuestionId) {
+		if (currentQuestion.value.freeText) {
+			nextQuestionId = currentQuestion.value.next;
+		} else {
+			const selectedOption = currentQuestion.value.options.find(opt => opt.text === answers.value[currentQuestion.value.id]);
+			nextQuestionId = selectedOption ? selectedOption.next : null;
+		}
+	}
 
 	if (nextQuestionId === 'end') {
 		submitSurvey();
-	} else {
+	} else if (nextQuestionId) {
 		const nextIndex = questions.findIndex(q => q.id === nextQuestionId);
 		if (nextIndex !== -1) {
 			currentQuestionIndex.value = nextIndex;
-			questionPath.value.push(nextQuestionId);  // Add this line
+			questionPath.value.push(nextQuestionId);
 			freeTextAnswer.value = ''; // Reset free text answer for the next question
 		} else {
 			console.error(`Next question with id ${nextQuestionId} not found`);
 		}
+	} else {
+		console.error('No next question defined');
 	}
 };
 
@@ -103,10 +112,24 @@ const previousQuestion = () => {
 	if (canGoBack.value) {
 		// Remove the current question from the path
 		questionPath.value.pop();
-		// Set the current question index to the last question in the path
-		currentQuestionIndex.value = questions.findIndex(q => q.id === questionPath.value[questionPath.value.length - 1]);
-		// Clear the answer for the current question
-		delete answers.value[questions[currentQuestionIndex.value].id];
+
+		// Get the previous question ID
+		const previousQuestionId = questionPath.value[questionPath.value.length - 1];
+
+		// Find the index of the previous question
+		const previousIndex = questions.findIndex(q => q.id === previousQuestionId);
+
+		if (previousIndex !== -1) {
+			currentQuestionIndex.value = previousIndex;
+
+			// Clear the answer for the question we're going back to
+			delete answers.value[questions[currentQuestionIndex.value].id];
+
+			// Clear the free text answer
+			freeTextAnswer.value = '';
+		} else {
+			console.error(`Previous question with id ${previousQuestionId} not found`);
+		}
 	}
 };
 
@@ -226,8 +249,6 @@ body {
 	margin-bottom: 30px;
 	/* Add space below the question and options */
 }
-
-
 
 
 h2 {
