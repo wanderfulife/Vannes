@@ -215,7 +215,7 @@ body {
 }
 
 .logo {
-	max-width: 100%;
+	max-width: 20%;
 	height: auto;
 	margin-top: auto;
 	margin-bottom: 20px;
