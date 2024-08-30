@@ -11,8 +11,8 @@
 				<button @click="startSurvey" class="btn-next">COMMENCER QUESTIONNAIRE</button>
 			</div>
 
-			<div v-else-if="currentStep === 'survey'">
-				<div v-if="currentQuestion">
+			<div v-if="currentStep === 'survey'">
+				<div v-if="currentQuestion" class="question-container">
 					<h2>{{ currentQuestion.text }}</h2>
 					<div v-if="!currentQuestion.freeText">
 						<div v-for="(option, index) in currentQuestion.options" :key="index">
@@ -55,14 +55,9 @@ const enqueteur = ref('');
 const currentQuestionIndex = ref(0);
 const answers = ref({});
 const freeTextAnswer = ref('');
-
-
 const currentQuestion = computed(() => questions[currentQuestionIndex.value]);
-
-
-
-const canGoBack = computed(() => currentQuestionIndex.value > 0);
-
+const canGoBack = computed(() => questionPath.value.length > 1);
+const questionPath = ref(['Q1']);
 const isLastQuestion = computed(() => currentQuestionIndex.value === questions.length - 1);
 
 const setEnqueteur = () => {
@@ -96,10 +91,22 @@ const nextQuestion = () => {
 		const nextIndex = questions.findIndex(q => q.id === nextQuestionId);
 		if (nextIndex !== -1) {
 			currentQuestionIndex.value = nextIndex;
+			questionPath.value.push(nextQuestionId);  // Add this line
 			freeTextAnswer.value = ''; // Reset free text answer for the next question
 		} else {
 			console.error(`Next question with id ${nextQuestionId} not found`);
 		}
+	}
+};
+
+const previousQuestion = () => {
+	if (canGoBack.value) {
+		// Remove the current question from the path
+		questionPath.value.pop();
+		// Set the current question index to the last question in the path
+		currentQuestionIndex.value = questions.findIndex(q => q.id === questionPath.value[questionPath.value.length - 1]);
+		// Clear the answer for the current question
+		delete answers.value[questions[currentQuestionIndex.value].id];
 	}
 };
 
@@ -214,12 +221,14 @@ body {
 	box-sizing: border-box;
 }
 
-.logo {
-	max-width: 20%;
-	height: auto;
-	margin-top: auto;
-	margin-bottom: 20px;
+.question-container {
+	width: 100%;
+	margin-bottom: 30px;
+	/* Add space below the question and options */
 }
+
+
+
 
 h2 {
 	color: white;
@@ -246,6 +255,7 @@ h2 {
 	width: 100%;
 	max-width: 400px;
 	color: white;
+	background-color: grey;
 	padding: 15px;
 	margin-top: 10px;
 	border: none;
@@ -259,7 +269,16 @@ h2 {
 }
 
 .btn-return {
-	background-color: #898989;
+	margin-top: 30px;
+	/* Increased space above the Return button */
+}
+
+.logo {
+	max-width: 20%;
+	height: auto;
+	margin-top: 40px;
+	/* Increased space above the logo */
+	margin-bottom: 20px;
 }
 
 .btn-option {
@@ -295,65 +314,33 @@ h2 {
 	opacity: 0.9;
 }
 
-/* Media Queries for Responsiveness */
 @media screen and (max-width: 768px) {
-	.content-container {
-		padding: 5% 10px;
+	.question-container {
+		margin-bottom: 20px;
+		/* Slightly less space on smaller screens */
 	}
 
-	h2 {
-		font-size: 1rem;
+	.btn-return {
+		margin-top: 20px;
 	}
 
-	.btn-next,
-	.btn-return,
-	.btn-option,
-	.form-control {
-		font-size: 14px;
-	}
-
-	.footer {
-		padding: 15px;
-	}
-
-	.btn-download {
-		font-size: 14px;
-		padding: 8px 16px;
-	}
-
-	.doc-count {
-		font-size: 12px;
+	.logo {
+		margin-top: 30px;
 	}
 }
 
 @media screen and (max-width: 480px) {
-	.content-container {
-		padding: 5% 5px;
+	.question-container {
+		margin-bottom: 15px;
+		/* Even less space on very small screens */
 	}
 
-	h2 {
-		font-size: 0.9rem;
+	.btn-return {
+		margin-top: 15px;
 	}
 
-	.btn-next,
-	.btn-return,
-	.btn-option,
-	.form-control {
-		font-size: 12px;
-		padding: 12px;
-	}
-
-	.footer {
-		padding: 10px;
-	}
-
-	.btn-download {
-		font-size: 12px;
-		padding: 6px 12px;
-	}
-
-	.doc-count {
-		font-size: 10px;
+	.logo {
+		margin-top: 25px;
 	}
 }
 </style>
