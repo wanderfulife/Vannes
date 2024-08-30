@@ -14,7 +14,7 @@
 			</div>
 
 			<!-- Start Survey Step -->
-			<div v-else-if="currentStep === 'start'">
+			<div v-else-if="currentStep === 'start'" class="start-survey-container">
 				<button @click="startSurvey" class="btn-next">COMMENCER QUESTIONNAIRE</button>
 			</div>
 
@@ -32,8 +32,10 @@
 					</div>
 					<!-- Free Text Questions -->
 					<div v-else>
-						<input v-model="freeTextAnswer" class="form-control" type="text"
-							:placeholder="currentQuestion.freeTextPlaceholder || 'Votre réponse'" />
+						<div class="input-container">
+							<input v-model="freeTextAnswer" class="form-control" type="text"
+								:placeholder="currentQuestion.freeTextPlaceholder || 'Votre réponse'" />
+						</div>
 						<button @click="handleFreeTextAnswer" class="btn-next" :disabled="!freeTextAnswer.trim()">
 							{{ isLastQuestion ? 'Terminer' : 'Suivant' }}
 						</button>
@@ -276,6 +278,19 @@ body {
 	color: white;
 }
 
+/* Center the Start Survey button horizontally and vertically */
+.start-survey-container {
+	display: flex;
+	justify-content: center;
+	/* Center horizontally */
+	align-items: center;
+	/* Center vertically */
+	height: 50vh;
+	/* Full viewport height */
+	width: 100%;
+	/* Full width */
+}
+
 .content-container {
 	flex-grow: 1;
 	display: flex;
@@ -293,6 +308,13 @@ body {
 	margin-bottom: 30px;
 }
 
+.input-container {
+	display: flex;
+	justify-content: center;
+	/* Center horizontally */
+	width: 100%;
+	/* Take full width of the parent */
+}
 
 h2 {
 	text-align: center;
@@ -302,6 +324,7 @@ h2 {
 .form-control {
 	width: 100%;
 	max-width: 400px;
+	/* Maximum width of the input */
 	padding: 10px;
 	border-radius: 5px;
 	border: 1px solid white;
@@ -309,9 +332,7 @@ h2 {
 	color: white;
 	font-size: 16px;
 	margin-bottom: 15px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	box-sizing: border-box;
 }
 
 .btn-next,
@@ -343,7 +364,7 @@ h2 {
 }
 
 .logo {
-	max-width: 20%;
+	max-width: 25%;
 	height: auto;
 	margin-top: 40px;
 	margin-bottom: 20px;
@@ -406,33 +427,11 @@ h2 {
 	}
 }
 
+/* Ensure responsive centering */
 @media screen and (max-width: 480px) {
-	.content-container {
-		width: 95%;
-		padding: 5% 10px;
+	.form-control {
+		max-width: 100%;
+		/* Ensure full width on small screens */
 	}
-
-	.question-container {
-		margin-bottom: 15px;
-	}
-
-	.btn-return {
-		margin-top: 15px;
-	}
-
-	.logo {
-		margin-top: 25px;
-	}
-
-		.form-control,
-		.btn-next,
-		.btn-return,
-		.btn-option {
-			width: 100%;
-			max-width: 400px;
-			margin-left: auto;
-			margin-right: auto;
-			display: block;
-		}
 }
 </style>
