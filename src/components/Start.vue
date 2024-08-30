@@ -309,6 +309,9 @@ h2 {
 	color: white;
 	font-size: 16px;
 	margin-bottom: 15px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .btn-next,
