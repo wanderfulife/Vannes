@@ -82,7 +82,7 @@ export const questions = [
 			},
 			{
 				text: "Dans un autre parking au sud de la gare",
-				next: "Q3a_prime",
+				next: "Q3a_precision_sud",
 				requiresPrecision: true,
 			},
 			{
@@ -91,7 +91,7 @@ export const questions = [
 			},
 			{
 				text: "Dans un autre parking au nord de la gare",
-				next: "Q3a_prime",
+				next: "Q3a_precision_nord",
 				requiresPrecision: true,
 			},
 			{
@@ -101,12 +101,30 @@ export const questions = [
 		],
 	},
 	{
+		id: "Q3a_precision_sud",
+		text: "Préciser le nom du parking au sud de la gare :",
+		freeText: true,
+		next: "Q3a_prime",
+	},
+	{
+		id: "Q3a_precision_nord",
+		text: "Préciser le nom du parking au nord de la gare :",
+		freeText: true,
+		next: "Q3a_prime",
+	},
+	{
 		id: "Q3a_prime",
 		text: "Disposez-vous d'un abonnement ou d'un tarif préférentiel pour le stationnement ?",
 		options: [
-			{ text: "Oui", next: "Q4", requiresPrecision: true },
+			{ text: "Oui", next: "Q3a_prime_precision", requiresPrecision: true },
 			{ text: "Non", next: "Q4" },
 		],
+	},
+	{
+		id: "Q3a_prime_precision",
+		text: "Préciser quel type d'abonnement ou de tarif préférentiel :",
+		freeText: true,
+		next: "Q4",
 	},
 	{
 		id: "Q3b",
@@ -205,8 +223,14 @@ export const questions = [
 			{ text: "Je rentre à mon domicile principal", next: "Q6a" },
 			{ text: "Déplacement professionnel", next: "Q7" },
 			{ text: "Loisirs, tourisme", next: "Q7" },
-			{ text: "Autres", next: "Q7", freeText: true },
+			{ text: "Autres", next: "Q6_precision", requiresPrecision: true },
 		],
+	},
+	{
+		id: "Q6_precision",
+		text: "Veuillez préciser le motif de votre déplacement :",
+		freeText: true,
+		next: "Q7",
 	},
 	{
 		id: "Q6a",

@@ -1,19 +1,23 @@
 <template>
 	<div class="app-container">
 		<div class="content-container">
+			<!-- Enqueteur Input Step -->
 			<div v-if="currentStep === 'enqueteur'">
 				<h2>Prénom enqueteur :</h2>
 				<input class="form-control" type="text" v-model="enqueteur" />
 				<button v-if="enqueteur" @click="setEnqueteur" class="btn-next">Suivant</button>
 			</div>
 
+			<!-- Start Survey Step -->
 			<div v-else-if="currentStep === 'start'">
 				<button @click="startSurvey" class="btn-next">COMMENCER QUESTIONNAIRE</button>
 			</div>
 
+			<!-- Survey Questions Step -->
 			<div v-else-if="currentStep === 'survey'">
-				<div class="question-container">
+				<div v-if="!isSurveyComplete" class="question-container">
 					<h2>{{ currentQuestion.text }}</h2>
+					<!-- Multiple Choice Questions -->
 					<div v-if="!currentQuestion.freeText">
 						<div v-for="(option, index) in currentQuestion.options" :key="index">
 							<button @click="selectAnswer(option)" class="btn-option">
@@ -21,18 +25,29 @@
 							</button>
 						</div>
 					</div>
+					<!-- Free Text Questions -->
 					<div v-else>
 						<input v-model="freeTextAnswer" class="form-control" type="text"
 							:placeholder="currentQuestion.freeTextPlaceholder || 'Votre réponse'" />
-						<button @click="nextQuestion" class="btn-next" :disabled="!canProceed">Suivant</button>
+						<button @click="handleFreeTextAnswer" class="btn-next" :disabled="!freeTextAnswer.trim()">
+							{{ isLastQuestion ? 'Terminer' : 'Suivant' }}
+						</button>
 					</div>
+					<!-- Back Button -->
+					<button @click="previousQuestion" class="btn-return" v-if="canGoBack">Retour</button>
 				</div>
-				<button @click="previousQuestion" class="btn-return" v-if="canGoBack">Retour</button>
+				<!-- Survey Complete Message -->
+				<div v-if="isSurveyComplete" class="survey-complete">
+					<h2>Merci pour votre réponse et bon voyage.</h2>
+					<button @click="finishSurvey" class="btn-next">Finir questionnaire</button>
+				</div>
 			</div>
 
+			<!-- Logo -->
 			<img class="logo" src="../assets/Alycelogo.webp" alt="Logo Alyce">
 		</div>
 
+		<!-- Footer -->
 		<div class="footer">
 			<button class="btn-download" @click="downloadData">Download DATA</button>
 			<div class="doc-count">Nombre de questionnaires : {{ docCount }}</div>
@@ -55,10 +70,20 @@ const enqueteur = ref('');
 const currentQuestionIndex = ref(0);
 const answers = ref({});
 const freeTextAnswer = ref('');
+const questionPath = ref(['Q1']);
+
 const currentQuestion = computed(() => questions[currentQuestionIndex.value]);
 const canGoBack = computed(() => questionPath.value.length > 1);
-const questionPath = ref(['Q1']);
 const isLastQuestion = computed(() => currentQuestionIndex.value === questions.length - 1);
+const isSurveyComplete = computed(() => {
+	return currentQuestionIndex.value === questions.length - 1 && answers.value[currentQuestion.value.id] !== undefined;
+});
+const canProceed = computed(() => {
+	if (currentQuestion.value.freeText) {
+		return freeTextAnswer.value.trim() !== '';
+	}
+	return answers.value[currentQuestion.value.id] !== undefined;
+});
 
 const setEnqueteur = () => {
 	if (enqueteur.value.trim() !== '') {
@@ -66,40 +91,47 @@ const setEnqueteur = () => {
 	}
 };
 
+const startSurvey = () => {
+	startDate.value = new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+	currentStep.value = 'survey';
+	currentQuestionIndex.value = 0;
+	answers.value = {};
+};
+
+const handleFreeTextAnswer = () => {
+	answers.value[currentQuestion.value.id] = freeTextAnswer.value;
+	if (currentQuestionIndex.value < questions.length - 1) {
+		nextQuestion();
+	}
+	// If it's the last question, we don't call nextQuestion()
+};
 const selectAnswer = (option) => {
 	answers.value[currentQuestion.value.id] = option.text;
 	if (option.requiresPrecision) {
-		// If precision is required, move to the precision question
 		nextQuestion(option.next);
 	} else {
 		nextQuestion();
 	}
 };
 
-
 const nextQuestion = (forcedNextId = null) => {
-	if (currentQuestion.value.freeText) {
-		answers.value[currentQuestion.value.id] = freeTextAnswer.value;
-	}
-
 	let nextQuestionId = forcedNextId;
 	if (!nextQuestionId) {
-		if (currentQuestion.value.freeText) {
-			nextQuestionId = currentQuestion.value.next;
-		} else {
+		nextQuestionId = currentQuestion.value.next;
+		if (!currentQuestion.value.freeText) {
 			const selectedOption = currentQuestion.value.options.find(opt => opt.text === answers.value[currentQuestion.value.id]);
 			nextQuestionId = selectedOption ? selectedOption.next : null;
 		}
 	}
 
 	if (nextQuestionId === 'end') {
-		submitSurvey();
+		// Do nothing, wait for user to click "Finir questionnaire"
 	} else if (nextQuestionId) {
 		const nextIndex = questions.findIndex(q => q.id === nextQuestionId);
 		if (nextIndex !== -1) {
 			currentQuestionIndex.value = nextIndex;
 			questionPath.value.push(nextQuestionId);
-			freeTextAnswer.value = ''; // Reset free text answer for the next question
+			freeTextAnswer.value = '';
 		} else {
 			console.error(`Next question with id ${nextQuestionId} not found`);
 		}
@@ -110,22 +142,12 @@ const nextQuestion = (forcedNextId = null) => {
 
 const previousQuestion = () => {
 	if (canGoBack.value) {
-		// Remove the current question from the path
 		questionPath.value.pop();
-
-		// Get the previous question ID
 		const previousQuestionId = questionPath.value[questionPath.value.length - 1];
-
-		// Find the index of the previous question
 		const previousIndex = questions.findIndex(q => q.id === previousQuestionId);
-
 		if (previousIndex !== -1) {
 			currentQuestionIndex.value = previousIndex;
-
-			// Clear the answer for the question we're going back to
 			delete answers.value[questions[currentQuestionIndex.value].id];
-
-			// Clear the free text answer
 			freeTextAnswer.value = '';
 		} else {
 			console.error(`Previous question with id ${previousQuestionId} not found`);
@@ -133,30 +155,7 @@ const previousQuestion = () => {
 	}
 };
 
-const canProceed = computed(() => {
-	if (currentQuestion.value.freeText) {
-		return freeTextAnswer.value.trim() !== '';
-	}
-	return answers.value[currentQuestion.value.id] !== undefined;
-});
-
-const startSurvey = () => {
-	startDate.value = new Date().toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-	currentStep.value = 'survey';
-	currentQuestionIndex.value = 0;
-	answers.value = {};
-};
-
-const getDocCount = async () => {
-	try {
-		const querySnapshot = await getDocs(surveyCollectionRef);
-		docCount.value = querySnapshot.size;
-	} catch (error) {
-		console.error("Error getting document count:", error);
-	}
-};
-
-const submitSurvey = async () => {
+const finishSurvey = async () => {
 	const now = new Date();
 	await addDoc(surveyCollectionRef, {
 		HEURE_DEBUT: startDate.value,
@@ -166,11 +165,24 @@ const submitSurvey = async () => {
 		HEURE_FIN: now.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
 		...answers.value
 	});
+
 	currentStep.value = 'start';
 	startDate.value = "";
 	answers.value = {};
 	currentQuestionIndex.value = 0;
-	getDocCount();
+	questionPath.value = ['Q1'];
+	freeTextAnswer.value = '';
+
+	await getDocCount();
+};
+
+const getDocCount = async () => {
+	try {
+		const querySnapshot = await getDocs(surveyCollectionRef);
+		docCount.value = querySnapshot.size;
+	} catch (error) {
+		console.error("Error getting document count:", error);
+	}
 };
 
 const downloadData = async () => {
