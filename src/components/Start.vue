@@ -36,8 +36,8 @@
 					</div>
 					<div v-else-if="currentQuestion.id === 'Q2_precision'">
 						<CommuneSelector v-model="selectedCommune" v-model:postalCodePrefix="postalCodePrefix" />
-						<p>Commune sélectionnée: {{ selectedCommune }}</p>
-						<button @click="handleCommuneSelection" class="btn-next" :disabled="!isValidCommuneSelection">
+						<p>Commune sélectionnée ou saisie: {{ selectedCommune }}</p>
+						<button @click="handleCommuneSelection" class="btn-next" :disabled="!selectedCommune.trim()">
 							{{ isLastQuestion ? 'Terminer' : 'Suivant' }}
 						</button>
 					</div>
@@ -222,8 +222,9 @@ const updateSelectedCommune = (value) => {
 	selectedCommune.value = value;
 };
 
+
 const handleCommuneSelection = () => {
-	if (isValidCommuneSelection.value) {
+	if (selectedCommune.value.trim() !== '') {
 		const parts = selectedCommune.value.split(' - ');
 		if (parts.length === 2) {
 			// Dropdown selection
@@ -233,7 +234,7 @@ const handleCommuneSelection = () => {
 			answers.value['CODE_INSEE'] = codeInsee;
 			answers.value['COMMUNE_LIBRE'] = '';
 		} else {
-			// Manual entry
+			// Manual entry or free text
 			answers.value['Q2'] = 2; // 2 represents "Autre commune"
 			answers.value['Q2_COMMUNE'] = '';
 			answers.value['CODE_INSEE'] = '';

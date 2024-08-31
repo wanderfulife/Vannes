@@ -2,7 +2,7 @@
 <template>
   <div class="form-group">
     <input class="form-control" type="text" v-model="searchTerm" @input="search"
-      placeholder="Rechercher une commune ou un code postal" />
+      placeholder="Rechercher ou saisir une commune" />
     <div v-if="showDropdown" class="commune-dropdown">
       <div v-for="item in filteredCommunes" :key="item['CODE INSEE']" @click="selectCommune(item)"
         class="commune-option">
@@ -44,6 +44,9 @@ const search = () => {
   }).slice(0, 100);
 
   showDropdown.value = filteredCommunes.value.length > 0;
+
+  // Emit the current search term as the selected value
+  emit('update:modelValue', searchTerm.value);
 };
 
 const selectCommune = (item) => {
@@ -58,7 +61,7 @@ const selectCommune = (item) => {
 watch(() => props.modelValue, (newVal) => {
   if (newVal && newVal !== searchTerm.value) {
     const [commune] = newVal.split(' - ');
-    searchTerm.value = commune || '';
+    searchTerm.value = commune || newVal;
   }
 });
 
