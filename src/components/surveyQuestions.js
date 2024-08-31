@@ -7,9 +7,12 @@ export const questions = [
 			{ text: "Je viens de descendre du train", next: "end" },
 			{
 				text: "J'accompagne des voyageurs qui partent / J'attends des voyageurs qui arrivent",
-				next: "Q2",
+				next: "Q2_nonvoyageur",
 			},
-			{ text: "Autre raison (achat billet, commerces en gare...)", next: "Q2" },
+			{
+				text: "Autre raison (achat billet, commerces en gare...)",
+				next: "Q2_nonvoyageur",
+			},
 		],
 	},
 	{
@@ -290,6 +293,208 @@ export const questions = [
 		text: "Selon vous, que faudrait-il faire en priorité pour améliorer les conditions d'accès à cette gare ?",
 		freeText: true,
 		freeTextPlaceholder: "Votre réponse",
+		next: "end",
+	},
+	{
+		id: "Q2_nonvoyageur",
+		text: "Quelle est l'origine de votre déplacement ?",
+		options: [
+			{ text: "Vannes", next: "Q2a_nonvoyageur" },
+			{ text: "Autre commune", next: "Q2_precision_nonvoyageur" },
+		],
+	},
+	{
+		id: "Q2a_nonvoyageur",
+		text: "De quelle rue de Vannes venez-vous ?",
+		freeText: true,
+		next: "Q3_nonvoyageur",
+	},
+	{
+		id: "Q2_precision_nonvoyageur",
+		text: "Précisez la commune :",
+		freeText: true,
+		next: "Q3_nonvoyageur",
+	},
+	{
+		id: "Q3_nonvoyageur",
+		text: "Quel mode de transport avez-vous utilisé pour vous rendre à la gare ?",
+		options: [
+			{ text: "A pied", next: "Q4_nonvoyageur" },
+			{ text: "En voiture -- conducteur", next: "Q3a_nonvoyageur" },
+			{ text: "En voiture -- passager", next: "Q3b_nonvoyageur" },
+			{ text: "En bus/car", next: "Q3c_nonvoyageur" },
+			{ text: "A vélo", next: "Q3d_nonvoyageur" },
+			{ text: "A vélo à assistance électrique (VAE)", next: "Q3d_nonvoyageur" },
+			{ text: "En trottinette", next: "Q3d_nonvoyageur" },
+			{ text: "En Taxi/VTC", next: "Q4_nonvoyageur" },
+			{
+				text: "En 2 roues Motorisé (Moto, scooter...)",
+				next: "Q3a_nonvoyageur",
+			},
+			{ text: "En train - je fais une correspondance", next: "Q4_nonvoyageur" },
+			{ text: "Autre", next: "Q3_precision_nonvoyageur" },
+		],
+	},
+	{
+		id: "Q3_precision_nonvoyageur",
+		text: "Précisez le mode de transport :",
+		freeText: true,
+		next: "Q4_nonvoyageur",
+	},
+	{
+		id: "Q3a_nonvoyageur",
+		text: "Où avez-vous stationné votre véhicule ?",
+		options: [
+			{ text: "Dans un parking courte durée au sud", next: "Q3a'_nonvoyageur" },
+			{
+				text: "Dans le parking horodateur Ville au Nord",
+				next: "Q3a'_nonvoyageur",
+			},
+			{
+				text: "Dans le parking Bilaire à 1 km au Nord à proximité du centre d'entrainement du RCV",
+				next: "Q3a'_nonvoyageur",
+			},
+			{
+				text: "Sur une autre place en voirie au sud de la gare",
+				next: "Q3a'_nonvoyageur",
+			},
+			{
+				text: "Dans un autre parking au sud de la gare",
+				next: "Q3a_precision_nonvoyageur",
+			},
+			{
+				text: "Sur une autre place en voirie au nord de la gare",
+				next: "Q3a'_nonvoyageur",
+			},
+			{
+				text: "Dans un autre parking au nord de la gare",
+				next: "Q3a_precision_nonvoyageur",
+			},
+			{
+				text: "Sur un stationnement privé (box ou place de parking privée)",
+				next: "Q3a'_nonvoyageur",
+			},
+		],
+	},
+	{
+		id: "Q3a_precision_nonvoyageur",
+		text: "Précisez le nom du parking :",
+		freeText: true,
+		next: "Q3a'_nonvoyageur",
+	},
+	{
+		id: "Q3a'_nonvoyageur",
+		text: "Disposez-vous d'un abonnement ou d'un tarif préférentiel pour le stationnement ?",
+		options: [
+			{ text: "Oui", next: "Q3a'_precision_nonvoyageur" },
+			{ text: "Non", next: "Q4_nonvoyageur" },
+		],
+	},
+	{
+		id: "Q3a'_precision_nonvoyageur",
+		text: "Précisez le type d'abonnement ou de tarif préférentiel :",
+		freeText: true,
+		next: "Q4_nonvoyageur",
+	},
+	{
+		id: "Q3b_nonvoyageur",
+		text: "Où vous êtes-vous fait déposer ?",
+		options: [
+			{
+				text: "Au niveau de la dépose-minute devant le bâtiment voyageur au sud",
+				next: "Q4_nonvoyageur",
+			},
+			{
+				text: "Au niveau du parking courte durée au sud",
+				next: "Q4_nonvoyageur",
+			},
+			{
+				text: "Directement sur l'Avenue Favrel et Lincy devant la gare",
+				next: "Q4_nonvoyageur",
+			},
+			{ text: "Au niveau du giratoire de la gare", next: "Q4_nonvoyageur" },
+			{
+				text: "Au niveau du giratoire Georges Cadoret devant l'hôpital Chubert",
+				next: "Q4_nonvoyageur",
+			},
+			{ text: "Autre", next: "Q3b_precision_nonvoyageur" },
+		],
+	},
+	{
+		id: "Q3b_precision_nonvoyageur",
+		text: "Précisez l'endroit où vous vous êtes fait déposer :",
+		freeText: true,
+		next: "Q4_nonvoyageur",
+	},
+	{
+		id: "Q3c_nonvoyageur",
+		text: "Quelle ligne de bus/car avez-vous emprunté ?",
+		options: [
+			{ text: "Ligne Kicéo 1", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 4", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 6a", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 6b", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 7", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 8", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 12", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 20", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 21", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 22", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 23", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 24", next: "Q4_nonvoyageur" },
+			{ text: "Ligne Kicéo 25", next: "Q4_nonvoyageur" },
+			{ text: "Ligne BZ03", next: "Q4_nonvoyageur" },
+			{ text: "Ligne BZ04", next: "Q4_nonvoyageur" },
+			{ text: "Ligne BZ08", next: "Q4_nonvoyageur" },
+			{ text: "Ligne BZ09", next: "Q4_nonvoyageur" },
+			{ text: "Ligne BZ11", next: "Q4_nonvoyageur" },
+			{ text: "Car scolaire", next: "Q4_nonvoyageur" },
+			{ text: "Autre", next: "Q3c_precision_nonvoyageur" },
+		],
+	},
+	{
+		id: "Q3c_precision_nonvoyageur",
+		text: "Précisez la ligne de bus/car :",
+		freeText: true,
+		next: "Q4_nonvoyageur",
+	},
+	{
+		id: "Q3d_nonvoyageur",
+		text: "Où avez-vous stationné votre vélo/trottinette ?",
+		options: [
+			{
+				text: "Sur les arceaux sur le parvis sud du bâtiment voyageur",
+				next: "Q4_nonvoyageur",
+			},
+			{
+				text: "Dans la consigne Korrigo du bâtiment multiservice au sud-est de la gare",
+				next: "Q4_nonvoyageur",
+			},
+			{ text: "Autre", next: "Q3d_precision_nonvoyageur" },
+		],
+	},
+	{
+		id: "Q3d_precision_nonvoyageur",
+		text: "Précisez l'endroit où vous avez stationné votre vélo/trottinette :",
+		freeText: true,
+		next: "Q4_nonvoyageur",
+	},
+	{
+		id: "Q4_nonvoyageur",
+		text: "Quel âge avez-vous ?",
+		options: [
+			{ text: "Moins de 18 ans", next: "Q5_nonvoyageur" },
+			{ text: "Entre 18 et 30 ans", next: "Q5_nonvoyageur" },
+			{ text: "Entre 30 et 40 ans", next: "Q5_nonvoyageur" },
+			{ text: "Entre 40 et 55 ans", next: "Q5_nonvoyageur" },
+			{ text: "Entre 55 et 65 ans", next: "Q5_nonvoyageur" },
+			{ text: "Plus de 65 ans", next: "Q5_nonvoyageur" },
+		],
+	},
+	{
+		id: "Q5_nonvoyageur",
+		text: "Selon vous, que faudrait-il faire en priorité pour améliorer les conditions d'accès à cette gare ?",
+		freeText: true,
 		next: "end",
 	},
 ];

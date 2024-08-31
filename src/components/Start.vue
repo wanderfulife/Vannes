@@ -26,14 +26,15 @@
 				<div class="question-container">
 					<h2>{{ currentQuestion.text }}</h2>
 					<!-- Commune Selector for Q2 -->
-					<div v-if="currentQuestion.id === 'Q2'">
+					<div v-if="currentQuestion.id === 'Q2' || currentQuestion.id === 'Q2_nonvoyageur'">
 						<div v-for="(option, index) in currentQuestion.options" :key="index">
 							<button @click="selectAnswer(option, index)" class="btn-option">
 								{{ option.text }}
 							</button>
 						</div>
 					</div>
-					<div v-else-if="currentQuestion.id === 'Q2_precision'">
+					<div
+						v-else-if="currentQuestion.id === 'Q2_precision' || currentQuestion.id === 'Q2_precision_nonvoyageur'">
 						<CommuneSelector v-model="selectedCommune" v-model:postalCodePrefix="postalCodePrefix" />
 						<p>Commune sélectionnée ou saisie: {{ selectedCommune }}</p>
 						<button @click="handleCommuneSelection" class="btn-next" :disabled="!selectedCommune.trim()">
@@ -180,12 +181,23 @@ const selectAnswer = (option, index) => {
 	if (currentQuestion.value) {
 		answers.value[currentQuestion.value.id] = index + 1;
 
-		// Special handling for Q2
-		if (currentQuestion.value.id === 'Q2' && index === 0) {
-			// "Vannes" selected
-			answers.value['Q2_COMMUNE'] = 'Vannes';
-			answers.value['CODE_INSEE'] = '56260'; // INSEE code for Vannes
-			answers.value['COMMUNE_LIBRE'] = '';
+		// Special handling for Q1
+		if (currentQuestion.value.id === 'Q1') {
+			if (index === 1) { // "Je viens de descendre du train"
+				finishSurvey();
+				return;
+			}
+		}
+
+		// Special handling for Q2 and Q2_nonvoyageur
+		if (currentQuestion.value.id === 'Q2' || currentQuestion.value.id === 'Q2_nonvoyageur') {
+			if (index === 0) {
+				// "Vannes" selected
+				const questionPrefix = currentQuestion.value.id === 'Q2' ? 'Q2' : 'Q2_nonvoyageur';
+				answers.value[`${questionPrefix}_COMMUNE`] = 'Vannes';
+				answers.value['CODE_INSEE'] = '56260'; // INSEE code for Vannes
+				answers.value['COMMUNE_LIBRE'] = '';
+			}
 		}
 
 		if (option.next === 'end') {
@@ -222,24 +234,121 @@ const updateSelectedCommune = (value) => {
 };
 
 
+// In your Vue component script
+
+
+
 const handleCommuneSelection = () => {
 	if (selectedCommune.value.trim() !== '') {
 		const parts = selectedCommune.value.split(' - ');
+		const currentQuestionId = currentQuestion.value.id;
+		const isNonPassenger = currentQuestionId.includes('nonvoyageur');
+		const questionPrefix = isNonPassenger ? 'Q2_nonvoyageur' : 'Q2';
+
 		if (parts.length === 2) {
 			// Dropdown selection
 			const [commune, codeInsee] = parts;
-			answers.value['Q2'] = 2; // 2 represents "Autre commune"
-			answers.value['Q2_COMMUNE'] = commune;
+			answers.value[questionPrefix] = 2; // 2 represents "Other commune"
+			answers.value[`${questionPrefix}_COMMUNE`] = commune;
 			answers.value['CODE_INSEE'] = codeInsee;
-			answers.value['COMMUNE_LIBRE'] = '';
 		} else {
 			// Manual entry or free text
-			answers.value['Q2'] = 2; // 2 represents "Autre commune"
-			answers.value['Q2_COMMUNE'] = '';
-			answers.value['CODE_INSEE'] = '';
-			answers.value['COMMUNE_LIBRE'] = selectedCommune.value.trim();
+			answers.value[questionPrefix] = 2; // 2 represents "Other commune"
+			answers.value[`${questionPrefix}_COMMUNE`] = selectedCommune.value.trim();
+			answers.value['CODE_INSEE'] = ''; // No INSEE code for manual entry
 		}
 		nextQuestion();
+	}
+};
+
+const downloadData = async () => {
+	try {
+		const querySnapshot = await getDocs(surveyCollectionRef);
+
+		// Define the exact order of fields, including CODE_INSEE
+		const headerOrder = [
+			'ID_questionnaire',
+			'ENQUETEUR',
+			'DATE',
+			'JOUR',
+			'HEURE_DEBUT',
+			'HEURE_FIN',
+			'TYPE_QUESTIONNAIRE',
+			'Q1',
+			'Q2',
+			'Q2_COMMUNE',
+			'Q2_nonvoyageur',
+			'Q2_nonvoyageur_COMMUNE',
+			'CODE_INSEE',
+			'Q2a',
+			'Q2a_nonvoyageur',
+			'Q3',
+			'Q3a',
+			'Q3a_precision_sud',
+			'Q3a_precision_nord',
+			'Q3a_prime',
+			'Q3a_prime_precision',
+			'Q3b',
+			'Q3b_precision',
+			'Q3c',
+			'Q3c_precision',
+			'Q3d',
+			'Q3d_precision',
+			'Q3_autre',
+			'Q4',
+			'Q5',
+			'Q6',
+			'Q6_precision',
+			'Q6a',
+			'Q7',
+			'Q8',
+			'Q9',
+			// Non-voyageur questions grouped from Q3 onwards
+			'Q3_nonvoyageur',
+			'Q3_precision_nonvoyageur',
+			'Q3a_nonvoyageur',
+			'Q3a_precision_nonvoyageur',
+			'Q3a\'_nonvoyageur',
+			'Q3a\'_precision_nonvoyageur',
+			'Q3b_nonvoyageur',
+			'Q3b_precision_nonvoyageur',
+			'Q3c_nonvoyageur',
+			'Q3c_precision_nonvoyageur',
+			'Q3d_nonvoyageur',
+			'Q3d_precision_nonvoyageur',
+			'Q4_nonvoyageur',
+			'Q5_nonvoyageur'
+		];
+
+		const headers = headerOrder.reduce((acc, key) => {
+			acc[key] = key;
+			return acc;
+		}, {});
+
+		const data = querySnapshot.docs.map(doc => {
+			const docData = doc.data();
+			return headerOrder.reduce((acc, key) => {
+				acc[key] = docData[key] || "";
+				return acc;
+			}, {});
+		});
+
+		const worksheet = XLSX.utils.json_to_sheet(data, { header: headerOrder });
+
+		// Set column widths
+		const colWidths = headerOrder.map(() => ({ wch: 20 }));
+		worksheet['!cols'] = colWidths;
+
+		const workbook = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+
+		// Use a timestamp in the filename to avoid overwriting
+		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+		XLSX.writeFile(workbook, `Vannes_${timestamp}.xlsx`);
+
+		console.log("File downloaded successfully");
+	} catch (error) {
+		console.error("Error downloading data:", error);
 	}
 };
 
@@ -262,12 +371,11 @@ const nextQuestion = (forcedNextId = null) => {
 			currentQuestionIndex.value = nextIndex;
 			questionPath.value.push(nextQuestionId);
 			freeTextAnswer.value = '';
-			selectedCommune.value = ''; // Reset selectedCommune
-			postalCodePrefix.value = ''; // Reset postalCodePrefix
+			selectedCommune.value = '';
+			postalCodePrefix.value = '';
 		}
 	}
 };
-
 const previousQuestion = () => {
 	if (canGoBack.value) {
 		questionPath.value.pop();
@@ -285,6 +393,11 @@ const finishSurvey = async () => {
 	isSurveyComplete.value = true;
 	const now = new Date();
 	const uniqueId = await getNextId();
+
+	// Determine if it's a passenger or non-passenger survey
+	const isPassenger = answers.value['Q1'] === 1;
+	const questionPrefix = isPassenger ? 'Q2' : 'Q2_nonvoyageur';
+
 	await addDoc(surveyCollectionRef, {
 		ID_questionnaire: uniqueId,
 		HEURE_DEBUT: startDate.value,
@@ -292,6 +405,9 @@ const finishSurvey = async () => {
 		JOUR: now.toLocaleDateString("fr-FR", { weekday: 'long' }),
 		ENQUETEUR: enqueteur.value,
 		HEURE_FIN: now.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+		TYPE_QUESTIONNAIRE: isPassenger ? 'Passager' : 'Non-passager',
+		[`${questionPrefix}_COMMUNE`]: answers.value[`${questionPrefix}_COMMUNE`] || '',
+		CODE_INSEE: answers.value['CODE_INSEE'] || '',
 		...answers.value
 	});
 
@@ -330,52 +446,6 @@ const getNextId = async () => {
 	return `VANNES-${counter.toString().padStart(6, '0')}`;
 };
 
-const downloadData = async () => {
-	try {
-		const querySnapshot = await getDocs(surveyCollectionRef);
-
-		const headers = {
-			ID_questionnaire: "ID questionnaire",
-			ENQUETEUR: "Enquêteur",
-			DATE: "Date",
-			JOUR: "Jour",
-			HEURE_DEBUT: "Heure début",
-			HEURE_FIN: "Heure fin",
-		};
-
-		// Add questions in order, including the new commune fields
-		questions.forEach(q => {
-			headers[q.id] = q.id;
-			if (q.id === 'Q2') {
-				headers['Q2_COMMUNE'] = "Q2 Commune";
-				headers['CODE_INSEE'] = "Code INSEE";
-				headers['COMMUNE_LIBRE'] = "Commune libre";
-			}
-		});
-
-		const data = querySnapshot.docs.map(doc => {
-			const docData = doc.data();
-			return Object.keys(headers).map(key => docData[key] || "");
-		});
-
-		const worksheet = XLSX.utils.aoa_to_sheet([
-			Object.values(headers),
-			...data
-		]);
-
-		// Set column widths
-		const colWidths = Object.keys(headers).map(() => ({ wch: 20 }));
-		worksheet['!cols'] = colWidths;
-
-		const workbook = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
-
-		XLSX.writeFile(workbook, "Vannes.xlsx");
-		console.log("File downloaded successfully");
-	} catch (error) {
-		console.error("Error downloading data:", error);
-	}
-};
 
 // Lifecycle hooks
 onMounted(() => {
