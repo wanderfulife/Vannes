@@ -1,3 +1,4 @@
+<!-- SurveyComponent.vue -->
 <template>
 	<div class="app-container">
 		<!-- Progress Bar -->
@@ -15,7 +16,8 @@
 
 			<!-- Start Survey Step -->
 			<div v-else-if="currentStep === 'start'" class="start-survey-container">
-				<h2> Bonjour,<br> pour mieux connaître les usagers de la gare de Vannes, GMVA et la SNCF souhaiteraient en
+				<h2>Bonjour,<br> pour mieux connaître les usagers de la gare de Vannes, GMVA et la SNCF souhaiteraient
+					en
 					savoir plus sur votre déplacement en cours.<br> Auriez-vous quelques secondes à nous accorder ?</h2>
 				<button @click="startSurvey" class="btn-next">COMMENCER QUESTIONNAIRE</button>
 			</div>
@@ -27,7 +29,7 @@
 					<!-- Multiple Choice Questions -->
 					<div v-if="!currentQuestion.freeText">
 						<div v-for="(option, index) in currentQuestion.options" :key="index">
-							<button @click="selectAnswer(option)" class="btn-option">
+							<button @click="selectAnswer(option, index)" class="btn-option">
 								{{ option.text }}
 							</button>
 						</div>
@@ -69,12 +71,13 @@
 import { ref, computed, onMounted } from "vue";
 import { db } from "../firebaseConfig";
 import { collection, getDocs, addDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { questions } from './surveyQuestions.js';
 
-// Reactive variables
 const docCount = ref(0);
 const surveyCollectionRef = collection(db, "Vannes");
+const counterDocRef = doc(db, "counters", "surveyCounter");
 const currentStep = ref('enqueteur');
 const startDate = ref('');
 const enqueteur = ref('');
@@ -85,32 +88,30 @@ const questionPath = ref(['Q1']);
 const isEnqueteurSaved = ref(false);
 const isSurveyComplete = ref(false);
 
-// Computed properties
-const currentQuestion = computed(() => questions[currentQuestionIndex.value]);
+const currentQuestion = computed(() => {
+	if (currentQuestionIndex.value >= 0 && currentQuestionIndex.value < questions.length) {
+		return questions[currentQuestionIndex.value];
+	}
+	return null;
+});
+
 const canGoBack = computed(() => questionPath.value.length > 1);
 const isLastQuestion = computed(() => currentQuestionIndex.value === questions.length - 1);
 
-// Progress Bar
 const progress = computed(() => {
 	if (currentStep.value !== 'survey') return 0;
 	if (isSurveyComplete.value) return 100;
-
 	const totalQuestions = questions.length;
 	const currentQuestionNumber = currentQuestionIndex.value + 1;
-
-	// Check if the current question is the last one or if it leads to the end
 	const isLastOrEnding = isLastQuestion.value ||
-		(currentQuestion.value.options &&
+		(currentQuestion.value && currentQuestion.value.options &&
 			currentQuestion.value.options.some(option => option.next === 'end'));
-
 	if (isLastOrEnding) {
 		return 100;
 	}
-
 	return Math.min(Math.round((currentQuestionNumber / totalQuestions) * 100), 99);
 });
 
-// Methods
 const setEnqueteur = () => {
 	if (enqueteur.value.trim() !== '') {
 		currentStep.value = 'start';
@@ -126,32 +127,37 @@ const startSurvey = () => {
 	isSurveyComplete.value = false;
 };
 
-const selectAnswer = (option) => {
-	answers.value[currentQuestion.value.id] = option.text;
-	if (option.next === 'end') {
-		finishSurvey();
-	} else if (option.requiresPrecision) {
-		nextQuestion(option.next);
-	} else {
-		nextQuestion();
+const selectAnswer = (option, index) => {
+	if (currentQuestion.value) {
+		answers.value[currentQuestion.value.id] = index + 1;
+		if (option.next === 'end') {
+			finishSurvey();
+		} else if (option.requiresPrecision) {
+			nextQuestion(option.next);
+		} else {
+			nextQuestion();
+		}
 	}
 };
 
 const handleFreeTextAnswer = () => {
-	answers.value[currentQuestion.value.id] = freeTextAnswer.value;
-	if (currentQuestionIndex.value < questions.length - 1) {
-		nextQuestion();
-	} else {
-		finishSurvey();
+	if (currentQuestion.value) {
+		answers.value[currentQuestion.value.id] = freeTextAnswer.value;
+		if (currentQuestionIndex.value < questions.length - 1) {
+			nextQuestion();
+		} else {
+			finishSurvey();
+		}
 	}
 };
 
 const nextQuestion = (forcedNextId = null) => {
 	let nextQuestionId = forcedNextId;
-	if (!nextQuestionId) {
+	if (!nextQuestionId && currentQuestion.value) {
 		nextQuestionId = currentQuestion.value.next;
 		if (!currentQuestion.value.freeText) {
-			const selectedOption = currentQuestion.value.options.find(opt => opt.text === answers.value[currentQuestion.value.id]);
+			const selectedAnswer = answers.value[currentQuestion.value.id];
+			const selectedOption = currentQuestion.value.options[selectedAnswer - 1];
 			nextQuestionId = selectedOption ? selectedOption.next : null;
 		}
 	}
@@ -164,11 +170,7 @@ const nextQuestion = (forcedNextId = null) => {
 			currentQuestionIndex.value = nextIndex;
 			questionPath.value.push(nextQuestionId);
 			freeTextAnswer.value = '';
-		} else {
-			console.error(`Next question with id ${nextQuestionId} not found`);
 		}
-	} else {
-		console.error('No next question defined');
 	}
 };
 
@@ -181,8 +183,6 @@ const previousQuestion = () => {
 			currentQuestionIndex.value = previousIndex;
 			delete answers.value[questions[currentQuestionIndex.value].id];
 			freeTextAnswer.value = '';
-		} else {
-			console.error(`Previous question with id ${previousQuestionId} not found`);
 		}
 	}
 };
@@ -190,7 +190,9 @@ const previousQuestion = () => {
 const finishSurvey = async () => {
 	isSurveyComplete.value = true;
 	const now = new Date();
+	const uniqueId = await getNextId();
 	await addDoc(surveyCollectionRef, {
+		ID_questionnaire: uniqueId,
 		HEURE_DEBUT: startDate.value,
 		DATE: now.toLocaleDateString("fr-FR").replace(/\//g, "-"),
 		JOUR: now.toLocaleDateString("fr-FR", { weekday: 'long' }),
@@ -221,41 +223,57 @@ const getDocCount = async () => {
 	}
 };
 
+const getNextId = async () => {
+	const counterDoc = await getDoc(counterDocRef);
+	let counter = 1;
+
+	if (counterDoc.exists()) {
+		counter = counterDoc.data().value + 1;
+	}
+
+	await setDoc(counterDocRef, { value: counter });
+
+	return `VANNES-${counter.toString().padStart(6, '0')}`;
+};
+
 const downloadData = async () => {
 	try {
 		const querySnapshot = await getDocs(surveyCollectionRef);
+
 		const headers = {
-			ID_questionnaire: "ID_questionnaire",
-			ENQUETEUR: "ENQUETEUR",
-			DATE: "DATE",
-			JOUR: "JOUR",
-			HEURE_DEBUT: "HEURE_DEBUT",
-			HEURE_FIN: "HEURE_FIN",
-			...Object.fromEntries(questions.map(q => [q.id, q.text]))
+			ID_questionnaire: "ID questionnaire",
+			ENQUETEUR: "Enquêteur",
+			DATE: "Date",
+			JOUR: "Jour",
+			HEURE_DEBUT: "Heure début",
+			HEURE_FIN: "Heure fin",
+			...Object.fromEntries(questions.map(q => [q.id, q.id]))
 		};
 
-		const data = querySnapshot.docs.map(doc => ({
-			ID_questionnaire: doc.id,
-			...Object.fromEntries(
-				Object.keys(headers).map(key => [key, doc.data()[key] || ""])
-			)
-		}));
+		const data = querySnapshot.docs.map(doc => {
+			const docData = doc.data();
+			return Object.keys(headers).map(key => docData[key] || "");
+		});
 
-		const worksheet = XLSX.utils.json_to_sheet(data, { header: Object.keys(headers) });
-		const maxWidths = Object.keys(headers).reduce((acc, key) => {
-			acc[key] = Math.max(headers[key].length, ...data.map(row => (row[key] || "").toString().length)) + 2;
-			return acc;
-		}, {});
+		const worksheet = XLSX.utils.aoa_to_sheet([
+			Object.values(headers),
+			...data
+		]);
 
-		worksheet['!cols'] = Object.values(maxWidths).map(width => ({ wch: width }));
+		// Set column widths
+		const colWidths = Object.keys(headers).map(() => ({ wch: 20 }));
+		worksheet['!cols'] = colWidths;
 
 		const workbook = XLSX.utils.book_new();
 		XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+
 		XLSX.writeFile(workbook, "Vannes.xlsx");
+		console.log("File downloaded successfully");
 	} catch (error) {
-		console.error("Error downloading data: ", error);
+		console.error("Error downloading data:", error);
 	}
 };
+
 
 onMounted(() => {
 	getDocCount();
