@@ -248,24 +248,24 @@ const handleCommuneSelection = () => {
 		if (parts.length === 2) {
 			// Dropdown selection
 			const [commune, codeInsee] = parts;
-			answers.value[questionPrefix] = 2; // 2 represents "Other commune"
 			answers.value[`${questionPrefix}_COMMUNE`] = commune;
 			answers.value['CODE_INSEE'] = codeInsee;
+			answers.value['COMMUNE_LIBRE'] = ''; // Clear COMMUNE_LIBRE
 		} else {
 			// Manual entry or free text
-			answers.value[questionPrefix] = 2; // 2 represents "Other commune"
-			answers.value[`${questionPrefix}_COMMUNE`] = selectedCommune.value.trim();
-			answers.value['CODE_INSEE'] = ''; // No INSEE code for manual entry
+			answers.value[`${questionPrefix}_COMMUNE`] = ''; // Clear the dropdown commune
+			answers.value['CODE_INSEE'] = ''; // Clear INSEE code
+			answers.value['COMMUNE_LIBRE'] = selectedCommune.value.trim(); // Set COMMUNE_LIBRE
 		}
 		nextQuestion();
 	}
 };
 
+
 const downloadData = async () => {
 	try {
 		const querySnapshot = await getDocs(surveyCollectionRef);
 
-		// Define the exact order of fields, including CODE_INSEE
 		const headerOrder = [
 			'ID_questionnaire',
 			'ENQUETEUR',
@@ -276,10 +276,11 @@ const downloadData = async () => {
 			'TYPE_QUESTIONNAIRE',
 			'Q1',
 			'Q2',
-			'Q2_COMMUNE',
 			'Q2_nonvoyageur',
+			'Q2_COMMUNE',
 			'Q2_nonvoyageur_COMMUNE',
 			'CODE_INSEE',
+			'COMMUNE_LIBRE',
 			'Q2a',
 			'Q2a_nonvoyageur',
 			'Q3',
@@ -303,7 +304,6 @@ const downloadData = async () => {
 			'Q7',
 			'Q8',
 			'Q9',
-			// Non-voyageur questions grouped from Q3 onwards
 			'Q3_nonvoyageur',
 			'Q3_precision_nonvoyageur',
 			'Q3a_nonvoyageur',
@@ -320,15 +320,25 @@ const downloadData = async () => {
 			'Q5_nonvoyageur'
 		];
 
-		const headers = headerOrder.reduce((acc, key) => {
-			acc[key] = key;
-			return acc;
-		}, {});
-
 		const data = querySnapshot.docs.map(doc => {
 			const docData = doc.data();
 			return headerOrder.reduce((acc, key) => {
-				acc[key] = docData[key] || "";
+				switch (key) {
+					case 'COMMUNE_LIBRE':
+						acc[key] = docData['COMMUNE_LIBRE'] || '';
+						break;
+					case 'Q2_COMMUNE':
+					case 'Q2_nonvoyageur_COMMUNE':
+						// Only fill these if COMMUNE_LIBRE is empty
+						acc[key] = docData['COMMUNE_LIBRE'] ? '' : (docData[key] || '');
+						break;
+					case 'CODE_INSEE':
+						// Only fill if a commune was selected from the list
+						acc[key] = docData['COMMUNE_LIBRE'] ? '' : (docData[key] || '');
+						break;
+					default:
+						acc[key] = docData[key] || '';
+				}
 				return acc;
 			}, {});
 		});
@@ -340,11 +350,11 @@ const downloadData = async () => {
 		worksheet['!cols'] = colWidths;
 
 		const workbook = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+		XLSX.utils.book_append_sheet(workbook, worksheet, "Survey Data");
 
 		// Use a timestamp in the filename to avoid overwriting
 		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-		XLSX.writeFile(workbook, `Vannes_${timestamp}.xlsx`);
+		XLSX.writeFile(workbook, `Vannes_Survey_Data_${timestamp}.xlsx`);
 
 		console.log("File downloaded successfully");
 	} catch (error) {
