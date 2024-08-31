@@ -176,8 +176,14 @@ export const questions = [
 			{ text: "Ligne BZ09", next: "Q4" },
 			{ text: "Ligne BZ11", next: "Q4" },
 			{ text: "Car scolaire", next: "Q4" },
-			{ text: "Autre", next: "Q4", requiresPrecision: true },
+			{ text: "Autre", next: "Q3c_precision", requiresPrecision: true },
 		],
+	},
+	{
+		id: "Q3c_precision",
+		text: "Veuillez préciser la ligne de bus/car que vous avez empruntée :",
+		freeText: true,
+		next: "Q4",
 	},
 	{
 		id: "Q3d",
@@ -192,8 +198,14 @@ export const questions = [
 				next: "Q4",
 			},
 			{ text: "Je le transporte avec moi dans le train", next: "Q4" },
-			{ text: "Autre", next: "Q4", requiresPrecision: true },
+			{ text: "Autre", next: "Q3d_precision", requiresPrecision: true },
 		],
+	},
+	{
+		id: "Q3d_precision",
+		text: "Veuillez préciser où vous avez stationné votre vélo/trottinette :",
+		freeText: true,
+		next: "Q4",
 	},
 	{
 		id: "Q3_autre",
