@@ -4,4 +4,7 @@ import json from "@rollup/plugin-json";
 
 export default defineConfig({
 	plugins: [vue(), json()],
+	build: {
+		chunkSizeWarningLimit: 1600,
+	},
 });
