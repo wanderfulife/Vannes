@@ -1,20 +1,19 @@
+<!-- CommuneSelector.vue -->
 <template>
   <div class="form-group">
-    <input class="form-control" type="text" v-model="localPostalCodePrefix"
-      placeholder="Code Postal" />
-    <input class="form-control" type="text" :value="modelValue" @input="updateCommune($event.target.value)"
-      placeholder="COMMUNE" />
-
-    <ul v-if="showDropdown && modelValue && filteredCommunes.length" class="commune-dropdown">
-      <li v-for="(item, index) in filteredCommunes" :key="`${item['CODE INSEE']}-${index}`" @click="selectCommune(item)">
-        {{ item.COMMUNE }} - {{ item.DEPARTEMENT }}
-      </li>
-    </ul>
+    <input class="form-control" type="text" v-model="searchTerm" @input="search"
+      placeholder="Rechercher une commune ou un code postal" />
+    <div v-if="showDropdown" class="commune-dropdown">
+      <div v-for="item in filteredCommunes" :key="item['CODE INSEE']" @click="selectCommune(item)"
+        class="commune-option">
+        {{ item.COMMUNE }} ({{ item['CODE POSTAL'] }})
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import insee from "./output.json";
 
 const props = defineProps({
@@ -22,33 +21,68 @@ const props = defineProps({
   postalCodePrefix: String
 });
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'update:postalCodePrefix']);
 
-const localPostalCodePrefix = ref(props.postalCodePrefix);
+const searchTerm = ref('');
 const showDropdown = ref(false);
+const filteredCommunes = ref([]);
 
-// Watch for changes in the postalCodePrefix prop
-watch(() => props.postalCodePrefix, (newVal) => {
-  localPostalCodePrefix.value = newVal;
-});
+const search = () => {
+  if (searchTerm.value.length < 2) {
+    showDropdown.value = false;
+    return;
+  }
 
-const updateCommune = (newValue) => {
-  emit('update:modelValue', newValue);
-  showDropdown.value = true;
+  filteredCommunes.value = insee.filter(item => {
+    if (!item) return false;
+
+    const commune = item.COMMUNE ? item.COMMUNE.toLowerCase() : '';
+    const postalCode = item['CODE POSTAL'] ? item['CODE POSTAL'].toString() : '';
+
+    return commune.includes(searchTerm.value.toLowerCase()) ||
+      postalCode.startsWith(searchTerm.value);
+  }).slice(0, 100);
+
+  showDropdown.value = filteredCommunes.value.length > 0;
 };
 
 const selectCommune = (item) => {
-  emit('update:modelValue', `${item.COMMUNE} - ${item['CODE INSEE']}`);
-  showDropdown.value = false;
+  if (item && item.COMMUNE && item['CODE INSEE']) {
+    searchTerm.value = item.COMMUNE;
+    emit('update:modelValue', `${item.COMMUNE} - ${item['CODE INSEE']}`);
+    emit('update:postalCodePrefix', item['CODE POSTAL'] ? item['CODE POSTAL'].toString() : '');
+    showDropdown.value = false;
+  }
 };
 
-const filteredCommunes = computed(() => {
-  return insee.filter(item => {
-    const postalCode = item['CODE POSTAL'] ? item['CODE POSTAL'].toString() : '';
-    const commune = item.COMMUNE ? item.COMMUNE.toLowerCase() : '';
-    const matchesPostalCode = postalCode.startsWith(localPostalCodePrefix.value);
-    const matchesCommune = commune.includes(props.modelValue.toLowerCase());
-    return matchesPostalCode && matchesCommune;
-  });
+watch(() => props.modelValue, (newVal) => {
+  if (newVal && newVal !== searchTerm.value) {
+    const [commune] = newVal.split(' - ');
+    searchTerm.value = commune || '';
+  }
+});
+
+watch(() => props.postalCodePrefix, (newVal) => {
+  if (newVal && newVal !== searchTerm.value) {
+    searchTerm.value = newVal;
+    search();
+  }
 });
 </script>
+
+<style scoped>
+.commune-dropdown {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+}
+
+.commune-option {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.commune-option:hover {
+  background-color: #f0f0f0;
+}
+</style>

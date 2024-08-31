@@ -17,8 +17,8 @@
 			<!-- Start Survey Step -->
 			<div v-else-if="currentStep === 'start'" class="start-survey-container">
 				<h2>Bonjour,<br> pour mieux connaître les usagers de la gare de Vannes, GMVA et la SNCF souhaiteraient
-					en
-					savoir plus sur votre déplacement en cours.<br> Auriez-vous quelques secondes à nous accorder ?</h2>
+					en savoir plus sur votre déplacement en cours.<br> Auriez-vous quelques secondes à nous accorder ?
+				</h2>
 				<button @click="startSurvey" class="btn-next">COMMENCER QUESTIONNAIRE</button>
 			</div>
 
@@ -26,8 +26,23 @@
 			<div v-else-if="currentStep === 'survey' && !isSurveyComplete">
 				<div class="question-container">
 					<h2>{{ currentQuestion.text }}</h2>
+					<!-- Commune Selector for Q2 -->
+					<div v-if="currentQuestion.id === 'Q2'">
+						<div v-for="(option, index) in currentQuestion.options" :key="index">
+							<button @click="selectAnswer(option, index)" class="btn-option">
+								{{ option.text }}
+							</button>
+						</div>
+					</div>
+					<div v-else-if="currentQuestion.id === 'Q2_precision'">
+						<CommuneSelector v-model="selectedCommune" v-model:postalCodePrefix="postalCodePrefix" />
+						<p>Commune sélectionnée: {{ selectedCommune }}</p>
+						<button @click="handleCommuneSelection" class="btn-next" :disabled="!isValidCommuneSelection">
+							{{ isLastQuestion ? 'Terminer' : 'Suivant' }}
+						</button>
+					</div>
 					<!-- Dropdown for Q5 -->
-					<div v-if="currentQuestion.id === 'Q5'">
+					<div v-else-if="currentQuestion.id === 'Q5'">
 						<select v-model="selectedStation" class="form-control">
 							<option value="">Sélectionnez une gare</option>
 							<option v-for="station in stationsList" :key="station" :value="station">
@@ -63,7 +78,7 @@
 
 			<!-- Survey Complete Step -->
 			<div v-else-if="isSurveyComplete" class="survey-complete">
-				<h2>Merci pour votre réponse et bon voyage.</h2>
+				<h2>Merci pour votre réponse et bonne journée.</h2>
 				<button @click="resetSurvey" class="btn-next">Nouveau questionnaire</button>
 			</div>
 
@@ -86,10 +101,10 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { questions } from './surveyQuestions.js';
+import CommuneSelector from './CommuneSelector.vue';
 
+// Refs
 const docCount = ref(0);
-const surveyCollectionRef = collection(db, "Vannes");
-const counterDocRef = doc(db, "counters", "surveyCounter");
 const currentStep = ref('enqueteur');
 const startDate = ref('');
 const enqueteur = ref('');
@@ -100,7 +115,14 @@ const questionPath = ref(['Q1']);
 const isEnqueteurSaved = ref(false);
 const isSurveyComplete = ref(false);
 const selectedStation = ref('');
+const selectedCommune = ref('');
+const postalCodePrefix = ref('');
 
+// Firestore refs
+const surveyCollectionRef = collection(db, "Vannes");
+const counterDocRef = doc(db, "counters", "surveyCounter");
+
+// Stations list
 const stationsList = [
 	'Brest', 'Kerhuon', 'La Forest-Landerneau', 'Landerneau', 'Dirinon',
 	'Pont-de-Buis', 'Châteaulin', 'Quimper', 'Rosporden', 'Bannalec',
@@ -114,14 +136,15 @@ const stationsList = [
 	'Rennes', 'Laval', 'Le Mans', 'Massy TGV', 'Paris Montparnasse'
 ];
 
+// Computed properties
 const currentQuestion = computed(() => {
-	if (currentQuestionIndex.value >= 0 && currentQuestionIndex.value < questions.length) {
-		return questions[currentQuestionIndex.value];
-	}
-	return null;
+	return currentQuestionIndex.value >= 0 && currentQuestionIndex.value < questions.length
+		? questions[currentQuestionIndex.value]
+		: null;
 });
 
 const canGoBack = computed(() => questionPath.value.length > 1);
+
 const isLastQuestion = computed(() => currentQuestionIndex.value === questions.length - 1);
 
 const progress = computed(() => {
@@ -130,14 +153,15 @@ const progress = computed(() => {
 	const totalQuestions = questions.length;
 	const currentQuestionNumber = currentQuestionIndex.value + 1;
 	const isLastOrEnding = isLastQuestion.value ||
-		(currentQuestion.value && currentQuestion.value.options &&
-			currentQuestion.value.options.some(option => option.next === 'end'));
-	if (isLastOrEnding) {
-		return 100;
-	}
-	return Math.min(Math.round((currentQuestionNumber / totalQuestions) * 100), 99);
+		(currentQuestion.value?.options?.some(option => option.next === 'end'));
+	return isLastOrEnding ? 100 : Math.min(Math.round((currentQuestionNumber / totalQuestions) * 100), 99);
 });
 
+const isValidCommuneSelection = computed(() => {
+	return selectedCommune.value.includes(' - ') || selectedCommune.value.trim() !== '';
+});
+
+// Methods
 const setEnqueteur = () => {
 	if (enqueteur.value.trim() !== '') {
 		currentStep.value = 'start';
@@ -155,11 +179,16 @@ const startSurvey = () => {
 
 const selectAnswer = (option, index) => {
 	if (currentQuestion.value) {
-		if (currentQuestion.value.id === 'Q5') {
-			// La sélection est gérée par handleStationSelection
-			return;
-		}
 		answers.value[currentQuestion.value.id] = index + 1;
+
+		// Special handling for Q2
+		if (currentQuestion.value.id === 'Q2' && index === 0) {
+			// "Vannes" selected
+			answers.value['Q2_COMMUNE'] = 'Vannes';
+			answers.value['CODE_INSEE'] = '56260'; // INSEE code for Vannes
+			answers.value['COMMUNE_LIBRE'] = '';
+		}
+
 		if (option.next === 'end') {
 			finishSurvey();
 		} else if (option.requiresPrecision) {
@@ -189,6 +218,31 @@ const handleStationSelection = () => {
 	}
 };
 
+const updateSelectedCommune = (value) => {
+	selectedCommune.value = value;
+};
+
+const handleCommuneSelection = () => {
+	if (isValidCommuneSelection.value) {
+		const parts = selectedCommune.value.split(' - ');
+		if (parts.length === 2) {
+			// Dropdown selection
+			const [commune, codeInsee] = parts;
+			answers.value['Q2'] = 2; // 2 represents "Autre commune"
+			answers.value['Q2_COMMUNE'] = commune;
+			answers.value['CODE_INSEE'] = codeInsee;
+			answers.value['COMMUNE_LIBRE'] = '';
+		} else {
+			// Manual entry
+			answers.value['Q2'] = 2; // 2 represents "Autre commune"
+			answers.value['Q2_COMMUNE'] = '';
+			answers.value['CODE_INSEE'] = '';
+			answers.value['COMMUNE_LIBRE'] = selectedCommune.value.trim();
+		}
+		nextQuestion();
+	}
+};
+
 const nextQuestion = (forcedNextId = null) => {
 	let nextQuestionId = forcedNextId;
 	if (!nextQuestionId && currentQuestion.value) {
@@ -196,7 +250,7 @@ const nextQuestion = (forcedNextId = null) => {
 		if (!currentQuestion.value.freeText) {
 			const selectedAnswer = answers.value[currentQuestion.value.id];
 			const selectedOption = currentQuestion.value.options[selectedAnswer - 1];
-			nextQuestionId = selectedOption ? selectedOption.next : null;
+			nextQuestionId = selectedOption?.next || null;
 		}
 	}
 
@@ -208,6 +262,8 @@ const nextQuestion = (forcedNextId = null) => {
 			currentQuestionIndex.value = nextIndex;
 			questionPath.value.push(nextQuestionId);
 			freeTextAnswer.value = '';
+			selectedCommune.value = ''; // Reset selectedCommune
+			postalCodePrefix.value = ''; // Reset postalCodePrefix
 		}
 	}
 };
@@ -285,8 +341,17 @@ const downloadData = async () => {
 			JOUR: "Jour",
 			HEURE_DEBUT: "Heure début",
 			HEURE_FIN: "Heure fin",
-			...Object.fromEntries(questions.map(q => [q.id, q.id]))
 		};
+
+		// Add questions in order, including the new commune fields
+		questions.forEach(q => {
+			headers[q.id] = q.id;
+			if (q.id === 'Q2') {
+				headers['Q2_COMMUNE'] = "Q2 Commune";
+				headers['CODE_INSEE'] = "Code INSEE";
+				headers['COMMUNE_LIBRE'] = "Commune libre";
+			}
+		});
 
 		const data = querySnapshot.docs.map(doc => {
 			const docData = doc.data();
@@ -312,7 +377,7 @@ const downloadData = async () => {
 	}
 };
 
-
+// Lifecycle hooks
 onMounted(() => {
 	getDocCount();
 });
