@@ -15,6 +15,8 @@
 
 			<!-- Start Survey Step -->
 			<div v-else-if="currentStep === 'start'" class="start-survey-container">
+				<h2> Bonjour,<br> pour mieux connaître les usagers de la gare de Vannes, GMVA et la SNCF souhaiteraient en
+					savoir plus sur votre déplacement en cours.<br> Auriez-vous quelques secondes à nous accorder ?</h2>
 				<button @click="startSurvey" class="btn-next">COMMENCER QUESTIONNAIRE</button>
 			</div>
 
@@ -280,7 +282,6 @@ body {
 
 /* Center the Start Survey button horizontally and vertically */
 .start-survey-container {
-	display: flex;
 	justify-content: center;
 	/* Center horizontally */
 	align-items: center;
@@ -336,6 +337,7 @@ h2 {
 	font-size: 16px;
 	margin-bottom: 15px;
 	box-sizing: border-box;
+	outline: none;
 }
 
 .btn-next,
