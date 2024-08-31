@@ -26,8 +26,20 @@
 			<div v-else-if="currentStep === 'survey' && !isSurveyComplete">
 				<div class="question-container">
 					<h2>{{ currentQuestion.text }}</h2>
+					<!-- Dropdown for Q5 -->
+					<div v-if="currentQuestion.id === 'Q5'">
+						<select v-model="selectedStation" class="form-control">
+							<option value="">Sélectionnez une gare</option>
+							<option v-for="station in stationsList" :key="station" :value="station">
+								{{ station }}
+							</option>
+						</select>
+						<button @click="handleStationSelection" class="btn-next" :disabled="!selectedStation">
+							{{ isLastQuestion ? 'Terminer' : 'Suivant' }}
+						</button>
+					</div>
 					<!-- Multiple Choice Questions -->
-					<div v-if="!currentQuestion.freeText">
+					<div v-else-if="!currentQuestion.freeText">
 						<div v-for="(option, index) in currentQuestion.options" :key="index">
 							<button @click="selectAnswer(option, index)" class="btn-option">
 								{{ option.text }}
@@ -87,6 +99,20 @@ const freeTextAnswer = ref('');
 const questionPath = ref(['Q1']);
 const isEnqueteurSaved = ref(false);
 const isSurveyComplete = ref(false);
+const selectedStation = ref('');
+
+const stationsList = [
+	'Brest', 'Kerhuon', 'La Forest-Landerneau', 'Landerneau', 'Dirinon',
+	'Pont-de-Buis', 'Châteaulin', 'Quimper', 'Rosporden', 'Bannalec',
+	'Quimperlé', 'Gestel', 'Lorient', 'Hennebont', 'Brandérion',
+	'Landévant', 'Landaul – Mendon', 'Auray', 'Sainte-Anne', 'Vannes',
+	'Questembert', 'Malansac', 'Redon', 'Séverac', 'Saint-Gildas-des-Bois',
+	'Drefféac', 'Pontchâteau', 'Savenay', 'Cordemais', 'Saint-Etienne-de-Montluc',
+	'Couëron', 'Basse Indre – Saint-Herblain', 'Chantenay', 'Nantes', 'Masserac',
+	'Beslé', 'Fougeray-Langon', 'Messac-Guipry', 'Pléchâtel', 'Saint-Senoux-Pléchâtel',
+	'Guichen-Bourg-des-Comptes', 'Laillé', 'Bruz', 'Ker Lann', 'Saint-Jacques-de-la-Lande',
+	'Rennes', 'Laval', 'Le Mans', 'Massy TGV', 'Paris Montparnasse'
+];
 
 const currentQuestion = computed(() => {
 	if (currentQuestionIndex.value >= 0 && currentQuestionIndex.value < questions.length) {
@@ -129,6 +155,10 @@ const startSurvey = () => {
 
 const selectAnswer = (option, index) => {
 	if (currentQuestion.value) {
+		if (currentQuestion.value.id === 'Q5') {
+			// La sélection est gérée par handleStationSelection
+			return;
+		}
 		answers.value[currentQuestion.value.id] = index + 1;
 		if (option.next === 'end') {
 			finishSurvey();
@@ -148,6 +178,14 @@ const handleFreeTextAnswer = () => {
 		} else {
 			finishSurvey();
 		}
+	}
+};
+
+const handleStationSelection = () => {
+	if (selectedStation.value) {
+		answers.value['Q5'] = selectedStation.value;
+		nextQuestion();
+		selectedStation.value = ''; // Reset selection for next use
 	}
 };
 
