@@ -25,6 +25,13 @@
 			<div v-else-if="currentStep === 'survey' && !isSurveyComplete">
 				<div class="question-container">
 					<h2>{{ currentQuestion.text }}</h2>
+
+					<!-- PDF Button for Q3a and Q3a_nonvoyageur -->
+					<button v-if="['Q3a', 'Q3a_nonvoyageur'].includes(currentQuestion.id)" @click="showPdf = true"
+						class="btn-pdf">
+						Voir le plan du parking
+					</button>
+
 					<!-- Commune Selector for Q2 -->
 					<div v-if="currentQuestion.id === 'Q2' || currentQuestion.id === 'Q2_nonvoyageur'">
 						<div v-for="(option, index) in currentQuestion.options" :key="index">
@@ -91,6 +98,16 @@
 			<button class="btn-download" @click="downloadData">Download DATA</button>
 			<div class="doc-count">Nombre de questionnaires : {{ docCount }}</div>
 		</div>
+
+		<!-- PDF Modal -->
+		<div v-if="showPdf" class="modal">
+			<div class="modal-content pdf-content">
+				<span class="close" @click="showPdf = false">&times;</span>
+				<iframe :src="pdfUrl" width="100%" height="500px" type="application/pdf">
+					This browser does not support PDFs. Please download the PDF to view it.
+				</iframe>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -117,6 +134,8 @@ const isSurveyComplete = ref(false);
 const selectedStation = ref('');
 const selectedCommune = ref('');
 const postalCodePrefix = ref('');
+const showPdf = ref(false);
+const pdfUrl = ref('/Plan.pdf');
 
 // Firestore refs
 const surveyCollectionRef = collection(db, "Vannes");
@@ -642,5 +661,79 @@ h2 {
 		max-width: 100%;
 		/* Ensure full width on small screens */
 	}
+}
+.btn-pdf {
+	background-color: #ff9800;
+	/* Orange color to make it distinct */
+	color: white;
+	padding: 15px;
+	margin: 10px 0;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 16px;
+	width: 100%;
+	max-width: 400px;
+	text-align: center;
+	transition: background-color 0.3s;
+}
+
+.btn-pdf:hover {
+	background-color: #f57c00;
+	/* Darker orange on hover */
+}
+
+.modal {
+	display: flex;
+	position: fixed;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0, 0, 0, 0.4);
+	justify-content: center;
+	align-items: center;
+}
+
+.modal-content {
+	background-color: #fefefe;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 90%;
+	max-width: 800px;
+	position: relative;
+}
+
+.pdf-content {
+	height: 80vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+	cursor: pointer;
+	position: absolute;
+	right: 10px;
+	top: 5px;
+}
+
+.close:hover,
+.close:focus {
+	color: black;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+/* Ensure the PDF fits within the modal */
+.pdf-content iframe {
+	flex-grow: 1;
+	border: none;
+	margin-top: 20px;
 }
 </style>
