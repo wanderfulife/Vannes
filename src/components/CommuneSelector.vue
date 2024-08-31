@@ -13,8 +13,17 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import insee from "./output.json";
+import { ref, watch, onMounted } from 'vue';
+const insee = ref([]);
+
+onMounted(async () => {
+  try {
+    const response = await fetch('/output.json');
+    insee.value = await response.json();
+  } catch (error) {
+    console.error('Error loading insee data:', error);
+  }
+});
 
 const props = defineProps({
   modelValue: String,
@@ -28,12 +37,12 @@ const showDropdown = ref(false);
 const filteredCommunes = ref([]);
 
 const search = () => {
-  if (searchTerm.value.length < 2) {
+  if (searchTerm.value.length < 2 || !insee.value.length) {
     showDropdown.value = false;
     return;
   }
 
-  filteredCommunes.value = insee.filter(item => {
+  filteredCommunes.value = insee.value.filter(item => {
     if (!item) return false;
 
     const commune = item.COMMUNE ? item.COMMUNE.toLowerCase() : '';
