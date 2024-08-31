@@ -290,6 +290,7 @@ body {
 	/* Full viewport height */
 	width: 100%;
 	/* Full width */
+	margin-bottom: 5%;
 }
 
 .content-container {
