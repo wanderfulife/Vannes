@@ -1,4 +1,3 @@
-<!-- SurveyComponent.vue -->
 <template>
 	<div class="app-container">
 		<!-- Progress Bar -->

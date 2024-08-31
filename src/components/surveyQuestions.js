@@ -144,8 +144,14 @@ export const questions = [
 				text: "Au niveau du giratoire Georges Cadoret devant l'hôpital Chubert",
 				next: "Q4",
 			},
-			{ text: "Autre", next: "Q4", requiresPrecision: true },
+			{ text: "Autre", next: "Q3b_precision", requiresPrecision: true },
 		],
+	},
+	{
+		id: "Q3b_precision",
+		text: "Veuillez préciser l'endroit où vous vous êtes fait déposer :",
+		freeText: true,
+		next: "Q4",
 	},
 	{
 		id: "Q3c",
