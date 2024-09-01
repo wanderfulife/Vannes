@@ -252,6 +252,10 @@ onMounted(() => {
 .signin-modal {
 	max-width: 400px;
 }
+.modal-content h2 {
+	margin-top: 0;
+	/* Ensures the title doesn't add extra space at the top */
+}
 
 .admin-dashboard {
 	max-height: 90vh;
@@ -268,7 +272,8 @@ onMounted(() => {
 	cursor: pointer;
 	position: absolute;
 	right: 20px;
-	top: 15px;
+	top: 20px;
+	/* Adjusted from 15px to 20px */
 }
 
 .dashboard-content {
