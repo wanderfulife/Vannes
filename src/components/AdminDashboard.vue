@@ -5,7 +5,7 @@
 		<!-- Sign In Modal -->
 		<div v-if="showSignInModal" class="modal">
 			<div class="modal-content signin-modal">
-				<span class="close" @click="showSignInModal = false">&times;</span>
+				<button class="close" @click="showSignInModal = false">&times;</button>
 				<h2>Connexion Admin</h2>
 				<input v-model="password" type="password" placeholder="Entrez le mot de passe" class="form-control">
 				<button @click="signIn" class="btn-signin">Se connecter</button>
@@ -15,7 +15,7 @@
 		<!-- Admin Dashboard Modal -->
 		<div v-if="showAdminDashboard" class="modal">
 			<div class="modal-content admin-dashboard">
-				<span class="close" @click="showAdminDashboard = false">&times;</span>
+				<button class="close" @click="showAdminDashboard = false">&times;</button>
 				<h2>Tableau de Bord Admin</h2>
 				<div class="dashboard-content">
 					<div class="dashboard-card total">
@@ -26,7 +26,8 @@
 						<h3>Enquêtes par Enquêteur</h3>
 						<ul>
 							<li v-for="(count, name) in surveysByEnqueteur" :key="name">
-								{{ name }} <span class="count">{{ count }}</span>
+								<span>{{ name }}</span>
+								<span class="count">{{ count }}</span>
 							</li>
 						</ul>
 					</div>
@@ -34,7 +35,8 @@
 						<h3>Enquêtes par Type</h3>
 						<ul>
 							<li v-for="(count, type) in surveysByType" :key="type">
-								{{ type }} <span class="count">{{ count }}</span>
+								<span>{{ type }}</span>
+								<span class="count">{{ count }}</span>
 							</li>
 						</ul>
 					</div>
@@ -198,137 +200,120 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.btn-signin,
-.btn-download {
-
-			background-color: #4CAF50;
-			color: #ffffff;
-			border: none;
-			cursor: pointer;
-			font-size: 16px;
-			font-weight: bold;
-			padding: 12px 24px;
-			border-radius: 30px;
-			transition: all 0.3s ease;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-			margin-bottom: 20px;
-			/* Increased from 15px to 20px */
-		
+.btn-signin {
+	background-color: #4CAF50;
+	color: #ffffff;
+	border: none;
+	cursor: pointer;
+	font-size: 16px;
+	font-weight: bold;
+	padding: 12px 24px;
+	border-radius: 30px;
+	transition: all 0.3s ease;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
 }
 
+.btn-signin:hover {
+	background-color: #45a049;
+	box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Keep the rest of the styles unchanged */
 .btn-download {
 	background-color: #3498db;
-	margin-top: 20px;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 16px;
+	transition: background-color 0.3s;
 	width: 100%;
+	margin-top: 20px;
+}
+
+.btn-download:hover {
+	background-color: #2980b9;
 }
 
 .modal {
-	display: flex;
 	position: fixed;
 	z-index: 1000;
 	left: 0;
 	top: 0;
 	width: 100%;
 	height: 100%;
-	overflow: hidden;
-	/* Changed from auto to hidden */
-	background-color: rgba(0, 0, 0, 0.8);
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
 	justify-content: center;
 	align-items: center;
-	/* Keep it centered */
 }
+
 .modal-content {
-	background-color: #1e272e;
-	padding: 50px 30px 30px;
-	border-radius: 20px;
-	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-	position: relative;
+	background-color: #2c3e50;
 	color: #ecf0f1;
+	padding: 20px;
+	border-radius: 10px;
+	max-width: 500px;
 	width: 90%;
-	max-width: 600px;
-	max-height: 80vh;
-	/* Reduced from 90vh to 80vh */
+	max-height: 90vh;
 	overflow-y: auto;
-	overscroll-behavior: contain;
-	/* Prevents scroll chaining */
-	scroll-behavior: smooth;
-	/* Enables smooth scrolling */
+	position: relative;
 }
 
-.signin-modal {
-	max-width: 400px;
-}
-.modal-content h2 {
-	margin-top: 0;
-	/* Ensures the title doesn't add extra space at the top */
-}
-
-.admin-dashboard {
-	max-height: none;
-	/* Remove max-height constraint */
-	overflow-y: visible;
-	/* Allow content to determine height */
-}
 .close {
-	color: #bdc3c7;
-	float: right;
+	position: absolute;
+	right: 10px;
+	top: 10px;
 	font-size: 28px;
 	font-weight: bold;
+	color: #bdc3c7;
+	background: none;
+	border: none;
 	cursor: pointer;
-	position: absolute;
-	right: 20px;
-	top: 20px;
-	z-index: 1;
-	/* Ensure it's above other content */
+}
+
+.close:hover {
+	color: #ecf0f1;
 }
 
 .dashboard-content {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 	gap: 20px;
 	margin-bottom: 20px;
 }
 
 .dashboard-card {
-	background-color: #2c3e50;
-	border-radius: 10px;
-	/* Reduced from 15px */
-	padding: 20px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-card.total {
-	grid-column: 1 / -1;
-	text-align: center;
+	background-color: #34495e;
+	border-radius: 8px;
+	padding: 15px;
 }
 
 .dashboard-card h3 {
 	margin-top: 0;
 	color: #3498db;
-	font-size: 1.2em;
-	margin-bottom: 15px;
 }
 
 .dashboard-card ul {
 	list-style-type: none;
-	padding-left: 0;
+	padding: 0;
 	margin: 0;
 }
 
 .dashboard-card li {
 	display: flex;
 	justify-content: space-between;
-	margin-bottom: 10px;
-	font-size: 0.9em;
+	margin-bottom: 5px;
 }
 
 .big-number {
-	font-size: 4em;
+	font-size: 3em;
 	font-weight: bold;
 	color: #2ecc71;
-	margin: 0;
+	margin: 10px 0;
 }
 
 .count {
@@ -338,47 +323,25 @@ onMounted(() => {
 
 .form-control {
 	width: 100%;
-	padding: 12px;
-	margin-bottom: 15px;
+	padding: 10px;
+	margin-bottom: 10px;
 	border: 1px solid #34495e;
-	border-radius: 8px;
-	font-size: 16px;
+	border-radius: 5px;
 	background-color: #34495e;
 	color: #ecf0f1;
 }
 
-.form-control::placeholder {
-	color: #bdc3c7;
-}
-
-.modal-content::-webkit-scrollbar {
-	width: 8px;
-}
-
-.modal-content::-webkit-scrollbar-track {
-	background: #2c3e50;
-	border-radius: 4px;
-}
-
-.modal-content::-webkit-scrollbar-thumb {
-	background: #34495e;
-	border-radius: 4px;
-}
-
-.modal-content::-webkit-scrollbar-thumb:hover {
-	background: #4a6278;
-}
-
-@media (max-width: 768px) {
+@media (max-width: 600px) {
 	.modal-content {
-		padding: 40px 20px 20px;
-		max-height: 90vh;
-		/* Increased for mobile */
+		padding: 15px;
+	}
+
+	.big-number {
+		font-size: 2.5em;
 	}
 
 	.close {
-		top: 10px;
-		right: 10px;
+		font-size: 24px;
 	}
 }
 </style>
