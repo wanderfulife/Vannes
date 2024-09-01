@@ -95,7 +95,7 @@
 
 		<!-- Footer -->
 		<div class="footer">
-			<button class="btn-download" @click="downloadData">Download DATA</button>
+			<AdminDashboard />
 			<div class="doc-count">Nombre de questionnaires : {{ docCount }}</div>
 		</div>
 
@@ -119,6 +119,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { questions } from './surveyQuestions.js';
 import CommuneSelector from './CommuneSelector.vue';
+import AdminDashboard from './AdminDashboard.vue';
 
 // Refs
 const docCount = ref(0);
@@ -251,10 +252,6 @@ const handleStationSelection = () => {
 const updateSelectedCommune = (value) => {
 	selectedCommune.value = value;
 };
-
-
-// In your Vue component script
-
 
 
 const handleCommuneSelection = () => {
