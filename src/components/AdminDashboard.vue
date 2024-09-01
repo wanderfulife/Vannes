@@ -240,7 +240,8 @@ onMounted(() => {
 
 .modal-content {
 	background-color: #1e272e;
-	padding: 30px;
+	padding: 50px 30px 30px;
+	/* Increased top padding */
 	border-radius: 20px;
 	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 	position: relative;
