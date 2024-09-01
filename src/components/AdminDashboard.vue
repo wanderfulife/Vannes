@@ -18,7 +18,7 @@
 				<span class="close" @click="showAdminDashboard = false">&times;</span>
 				<h2>Tableau de Bord Admin</h2>
 				<div class="dashboard-content">
-					<div class="dashboard-card">
+					<div class="dashboard-card total">
 						<h3>Total des Enquêtes</h3>
 						<p class="big-number">{{ totalSurveys }}</p>
 					</div>
@@ -26,7 +26,7 @@
 						<h3>Enquêtes par Enquêteur</h3>
 						<ul>
 							<li v-for="(count, name) in surveysByEnqueteur" :key="name">
-								{{ name }} : <span class="count">{{ count }}</span>
+								{{ name }} <span class="count">{{ count }}</span>
 							</li>
 						</ul>
 					</div>
@@ -34,12 +34,12 @@
 						<h3>Enquêtes par Type</h3>
 						<ul>
 							<li v-for="(count, type) in surveysByType" :key="type">
-								{{ type }} : <span class="count">{{ count }}</span>
+								{{ type }} <span class="count">{{ count }}</span>
 							</li>
 						</ul>
 					</div>
-					<button @click="downloadData" class="btn-download">Télécharger les Données</button>
 				</div>
+				<button @click="downloadData" class="btn-download">Télécharger les Données</button>
 			</div>
 		</div>
 	</div>
@@ -193,7 +193,7 @@ const downloadData = async () => {
 };
 
 onMounted(() => {
-	// Vous pouvez ajouter ici toute logique d'initialisation si nécessaire
+	// Initialization logic if needed
 });
 </script>
 
@@ -206,17 +206,18 @@ onMounted(() => {
 	cursor: pointer;
 	font-size: 16px;
 	font-weight: bold;
-	padding: 10px 20px;
-	border-radius: 25px;
+	padding: 12px 24px;
+	border-radius: 30px;
 	transition: all 0.3s ease;
-	margin-bottom: 15px;
 	text-transform: uppercase;
 	letter-spacing: 1px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-download {
 	background-color: #3498db;
 	margin-top: 20px;
+	width: 100%;
 }
 
 .modal {
@@ -228,29 +229,31 @@ onMounted(() => {
 	width: 100%;
 	height: 100%;
 	overflow: auto;
-	background-color: rgba(0, 0, 0, 0.7);
+	background-color: rgba(0, 0, 0, 0.8);
 	justify-content: center;
 	align-items: center;
 }
 
 .modal-content {
-	background-color: #2c3e50;
+	background-color: #1e272e;
 	padding: 30px;
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+	border-radius: 20px;
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 	position: relative;
 	color: #ecf0f1;
+	width: 90%;
+	max-width: 600px;
 }
 
 .signin-modal {
-	width: 300px;
+	max-width: 400px;
 }
 
 .admin-dashboard {
-	width: 80%;
-	max-width: 800px;
-	max-height: 80vh;
+	max-height: 90vh;
 	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
 }
 
 .close {
@@ -260,47 +263,54 @@ onMounted(() => {
 	font-weight: bold;
 	cursor: pointer;
 	position: absolute;
-	right: 15px;
-	top: 10px;
-}
-
-.close:hover {
-	color: #ecf0f1;
+	right: 20px;
+	top: 15px;
 }
 
 .dashboard-content {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: space-between;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 20px;
+	margin-bottom: 20px;
 }
 
 .dashboard-card {
-	background-color: #34495e;
-	border-radius: 8px;
+	background-color: #2c3e50;
+	border-radius: 15px;
 	padding: 20px;
-	margin-bottom: 20px;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-	width: calc(50% - 10px);
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card.total {
+	grid-column: 1 / -1;
+	text-align: center;
 }
 
 .dashboard-card h3 {
 	margin-top: 0;
 	color: #3498db;
+	font-size: 1.2em;
+	margin-bottom: 15px;
 }
 
 .dashboard-card ul {
 	list-style-type: none;
 	padding-left: 0;
+	margin: 0;
 }
 
 .dashboard-card li {
+	display: flex;
+	justify-content: space-between;
 	margin-bottom: 10px;
+	font-size: 0.9em;
 }
 
 .big-number {
-	font-size: 48px;
+	font-size: 4em;
 	font-weight: bold;
 	color: #2ecc71;
+	margin: 0;
 }
 
 .count {
@@ -310,10 +320,10 @@ onMounted(() => {
 
 .form-control {
 	width: 100%;
-	padding: 10px;
+	padding: 12px;
 	margin-bottom: 15px;
 	border: 1px solid #34495e;
-	border-radius: 4px;
+	border-radius: 8px;
 	font-size: 16px;
 	background-color: #34495e;
 	color: #ecf0f1;
@@ -324,8 +334,17 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+	.modal-content {
+		width: 95%;
+		padding: 20px;
+	}
+
 	.dashboard-card {
-		width: 100%;
+		padding: 15px;
+	}
+
+	.big-number {
+		font-size: 3em;
 	}
 }
 </style>
