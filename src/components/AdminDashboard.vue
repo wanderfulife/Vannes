@@ -200,18 +200,22 @@ onMounted(() => {
 <style scoped>
 .btn-signin,
 .btn-download {
-	background-color: #4CAF50;
-	color: #ffffff;
-	border: none;
-	cursor: pointer;
-	font-size: 16px;
-	font-weight: bold;
-	padding: 12px 24px;
-	border-radius: 30px;
-	transition: all 0.3s ease;
-	text-transform: uppercase;
-	letter-spacing: 1px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+			background-color: #4CAF50;
+			color: #ffffff;
+			border: none;
+			cursor: pointer;
+			font-size: 16px;
+			font-weight: bold;
+			padding: 12px 24px;
+			border-radius: 30px;
+			transition: all 0.3s ease;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			margin-bottom: 20px;
+			/* Increased from 15px to 20px */
+		
 }
 
 .btn-download {
