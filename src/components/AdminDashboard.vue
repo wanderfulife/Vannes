@@ -232,15 +232,13 @@ onMounted(() => {
 	top: 0;
 	width: 100%;
 	height: 100%;
-	overflow: auto;
+	overflow: hidden;
+	/* Changed from auto to hidden */
 	background-color: rgba(0, 0, 0, 0.8);
 	justify-content: center;
-	align-items: flex-start;
-	/* Changed from center to flex-start */
-	padding: 20px;
-	/* Added padding */
+	align-items: center;
+	/* Keep it centered */
 }
-
 .modal-content {
 	background-color: #1e272e;
 	padding: 50px 30px 30px;
@@ -250,12 +248,13 @@ onMounted(() => {
 	color: #ecf0f1;
 	width: 90%;
 	max-width: 600px;
-	max-height: 90vh;
-	/* Added max-height */
+	max-height: 80vh;
+	/* Reduced from 90vh to 80vh */
 	overflow-y: auto;
-	/* Added overflow-y */
-	margin-top: 5vh;
-	/* Added margin-top */
+	overscroll-behavior: contain;
+	/* Prevents scroll chaining */
+	scroll-behavior: smooth;
+	/* Enables smooth scrolling */
 }
 
 .signin-modal {
@@ -267,12 +266,11 @@ onMounted(() => {
 }
 
 .admin-dashboard {
-	max-height: 90vh;
-	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
+	max-height: none;
+	/* Remove max-height constraint */
+	overflow-y: visible;
+	/* Allow content to determine height */
 }
-
 .close {
 	color: #bdc3c7;
 	float: right;
@@ -282,6 +280,8 @@ onMounted(() => {
 	position: absolute;
 	right: 20px;
 	top: 20px;
+	z-index: 1;
+	/* Ensure it's above other content */
 }
 
 .dashboard-content {
@@ -293,7 +293,8 @@ onMounted(() => {
 
 .dashboard-card {
 	background-color: #2c3e50;
-	border-radius: 15px;
+	border-radius: 10px;
+	/* Reduced from 15px */
 	padding: 20px;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -350,22 +351,34 @@ onMounted(() => {
 	color: #bdc3c7;
 }
 
+.modal-content::-webkit-scrollbar {
+	width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+	background: #2c3e50;
+	border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+	background: #34495e;
+	border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+	background: #4a6278;
+}
 
 @media (max-width: 768px) {
 	.modal-content {
 		padding: 40px 20px 20px;
-		margin-top: 0;
-		max-height: 100vh;
-		border-radius: 0;
+		max-height: 90vh;
+		/* Increased for mobile */
 	}
 
 	.close {
 		top: 10px;
 		right: 10px;
-	}
-
-	.modal {
-		padding: 0;
 	}
 }
 </style>
