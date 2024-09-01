@@ -265,15 +265,18 @@ onMounted(() => {
 }
 
 .close {
-	position: absolute;
-	right: 10px;
-	top: 10px;
+	position: fixed;
+	/* Change from absolute to fixed */
+	right: 20px;
+	top: 20px;
 	font-size: 28px;
 	font-weight: bold;
 	color: #bdc3c7;
 	background: none;
 	border: none;
 	cursor: pointer;
+	z-index: 1010;
+	/* Ensure it's above other content */
 }
 
 .close:hover {
@@ -333,15 +336,15 @@ onMounted(() => {
 
 @media (max-width: 600px) {
 	.modal-content {
-		padding: 15px;
-	}
-
-	.big-number {
-		font-size: 2.5em;
+		width: 100%;
+		height: 100%;
+		border-radius: 0;
+		max-height: 100vh;
 	}
 
 	.close {
-		font-size: 24px;
+		top: 10px;
+		right: 10px;
 	}
 }
 </style>
