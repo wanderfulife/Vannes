@@ -235,19 +235,27 @@ onMounted(() => {
 	overflow: auto;
 	background-color: rgba(0, 0, 0, 0.8);
 	justify-content: center;
-	align-items: center;
+	align-items: flex-start;
+	/* Changed from center to flex-start */
+	padding: 20px;
+	/* Added padding */
 }
 
 .modal-content {
 	background-color: #1e272e;
 	padding: 50px 30px 30px;
-	/* Increased top padding */
 	border-radius: 20px;
 	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 	position: relative;
 	color: #ecf0f1;
 	width: 90%;
 	max-width: 600px;
+	max-height: 90vh;
+	/* Added max-height */
+	overflow-y: auto;
+	/* Added overflow-y */
+	margin-top: 5vh;
+	/* Added margin-top */
 }
 
 .signin-modal {
@@ -274,7 +282,6 @@ onMounted(() => {
 	position: absolute;
 	right: 20px;
 	top: 20px;
-	/* Adjusted from 15px to 20px */
 }
 
 .dashboard-content {
@@ -343,18 +350,22 @@ onMounted(() => {
 	color: #bdc3c7;
 }
 
+
 @media (max-width: 768px) {
 	.modal-content {
-		width: 95%;
-		padding: 20px;
+		padding: 40px 20px 20px;
+		margin-top: 0;
+		max-height: 100vh;
+		border-radius: 0;
 	}
 
-	.dashboard-card {
-		padding: 15px;
+	.close {
+		top: 10px;
+		right: 10px;
 	}
 
-	.big-number {
-		font-size: 3em;
+	.modal {
+		padding: 0;
 	}
 }
 </style>
