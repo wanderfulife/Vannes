@@ -147,7 +147,7 @@ const stationsList = [
 	'Brest', 'Kerhuon', 'La Forest-Landerneau', 'Landerneau', 'Dirinon',
 	'Pont-de-Buis', 'Châteaulin', 'Quimper', 'Rosporden', 'Bannalec',
 	'Quimperlé', 'Gestel', 'Lorient', 'Hennebont', 'Brandérion',
-	'Landévant', 'Landaul – Mendon', 'Auray', 'Sainte-Anne', 'Vannes',
+	'Landévant', 'Landaul – Mendon', 'Auray', 'Sainte-Anne',
 	'Questembert', 'Malansac', 'Redon', 'Séverac', 'Saint-Gildas-des-Bois',
 	'Drefféac', 'Pontchâteau', 'Savenay', 'Cordemais', 'Saint-Etienne-de-Montluc',
 	'Couëron', 'Basse Indre – Saint-Herblain', 'Chantenay', 'Nantes', 'Masserac',
@@ -278,105 +278,6 @@ const handleCommuneSelection = () => {
 };
 
 
-const downloadData = async () => {
-	try {
-		const querySnapshot = await getDocs(surveyCollectionRef);
-
-		const headerOrder = [
-			'ID_questionnaire',
-			'ENQUETEUR',
-			'DATE',
-			'JOUR',
-			'HEURE_DEBUT',
-			'HEURE_FIN',
-			'TYPE_QUESTIONNAIRE',
-			'Q1',
-			'Q2',
-			'Q2_nonvoyageur',
-			'Q2_COMMUNE',
-			'Q2_nonvoyageur_COMMUNE',
-			'CODE_INSEE',
-			'COMMUNE_LIBRE',
-			'Q2a',
-			'Q2a_nonvoyageur',
-			'Q3',
-			'Q3a',
-			'Q3a_precision_sud',
-			'Q3a_precision_nord',
-			'Q3a_prime',
-			'Q3a_prime_precision',
-			'Q3b',
-			'Q3b_precision',
-			'Q3c',
-			'Q3c_precision',
-			'Q3d',
-			'Q3d_precision',
-			'Q3_autre',
-			'Q4',
-			'Q5',
-			'Q6',
-			'Q6_precision',
-			'Q6a',
-			'Q7',
-			'Q8',
-			'Q9',
-			'Q3_nonvoyageur',
-			'Q3_precision_nonvoyageur',
-			'Q3a_nonvoyageur',
-			'Q3a_precision_nonvoyageur',
-			'Q3a\'_nonvoyageur',
-			'Q3a\'_precision_nonvoyageur',
-			'Q3b_nonvoyageur',
-			'Q3b_precision_nonvoyageur',
-			'Q3c_nonvoyageur',
-			'Q3c_precision_nonvoyageur',
-			'Q3d_nonvoyageur',
-			'Q3d_precision_nonvoyageur',
-			'Q4_nonvoyageur',
-			'Q5_nonvoyageur'
-		];
-
-		const data = querySnapshot.docs.map(doc => {
-			const docData = doc.data();
-			return headerOrder.reduce((acc, key) => {
-				switch (key) {
-					case 'COMMUNE_LIBRE':
-						acc[key] = docData['COMMUNE_LIBRE'] || '';
-						break;
-					case 'Q2_COMMUNE':
-					case 'Q2_nonvoyageur_COMMUNE':
-						// Only fill these if COMMUNE_LIBRE is empty
-						acc[key] = docData['COMMUNE_LIBRE'] ? '' : (docData[key] || '');
-						break;
-					case 'CODE_INSEE':
-						// Only fill if a commune was selected from the list
-						acc[key] = docData['COMMUNE_LIBRE'] ? '' : (docData[key] || '');
-						break;
-					default:
-						acc[key] = docData[key] || '';
-				}
-				return acc;
-			}, {});
-		});
-
-		const worksheet = XLSX.utils.json_to_sheet(data, { header: headerOrder });
-
-		// Set column widths
-		const colWidths = headerOrder.map(() => ({ wch: 20 }));
-		worksheet['!cols'] = colWidths;
-
-		const workbook = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(workbook, worksheet, "Survey Data");
-
-		// Use a timestamp in the filename to avoid overwriting
-		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-		XLSX.writeFile(workbook, `Vannes_Survey_Data_${timestamp}.xlsx`);
-
-		console.log("File downloaded successfully");
-	} catch (error) {
-		console.error("Error downloading data:", error);
-	}
-};
 
 const nextQuestion = (forcedNextId = null) => {
 	let nextQuestionId = forcedNextId;
