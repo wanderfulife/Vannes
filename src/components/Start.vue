@@ -50,13 +50,17 @@
 					</div>
 					<!-- Dropdown for Q5 -->
 					<div v-else-if="currentQuestion.id === 'Q5'">
-						<select v-model="selectedStation" class="form-control">
-							<option value="">Sélectionnez une gare</option>
-							<option v-for="station in stationsList" :key="station" :value="station">
-								{{ station }}
-							</option>
-						</select>
-						<button @click="handleStationSelection" class="btn-next" :disabled="!selectedStation">
+						<div class="station-input-container">
+							<input v-model="stationInput" class="form-control" type="text"
+								placeholder="Saisissez une gare" />
+							<ul v-if="showFilteredStations" class="commune-dropdown">
+								<li v-for="station in filteredStations" :key="station" @click="selectStation(station)"
+									class="commune-option">
+									{{ station }}
+								</li>
+							</ul>
+						</div>
+						<button @click="handleStationSelection" class="btn-next" :disabled="!stationInput.trim()">
 							{{ isLastQuestion ? 'Terminer' : 'Suivant' }}
 						</button>
 					</div>
@@ -112,14 +116,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { db } from "../firebaseConfig";
 import { collection, getDocs, addDoc } from "firebase/firestore";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import * as XLSX from "xlsx";
 import { questions } from './surveyQuestions.js';
 import CommuneSelector from './CommuneSelector.vue';
 import AdminDashboard from './AdminDashboard.vue';
+
 
 // Refs
 const docCount = ref(0);
@@ -137,6 +141,8 @@ const selectedCommune = ref('');
 const postalCodePrefix = ref('');
 const showPdf = ref(false);
 const pdfUrl = ref('/Plan.pdf');
+const stationInput = ref('');
+const filteredStations = ref([]);
 
 // Firestore refs
 const surveyCollectionRef = collection(db, "Vannes");
@@ -163,6 +169,8 @@ const currentQuestion = computed(() => {
 		: null;
 });
 
+const showFilteredStations = computed(() => stationInput.value.length > 0 && filteredStations.value.length > 0);
+
 const canGoBack = computed(() => questionPath.value.length > 1);
 
 const isLastQuestion = computed(() => currentQuestionIndex.value === questions.length - 1);
@@ -180,6 +188,19 @@ const progress = computed(() => {
 const isValidCommuneSelection = computed(() => {
 	return selectedCommune.value.includes(' - ') || selectedCommune.value.trim() !== '';
 });
+
+// Add these new methods
+const filterStations = () => {
+	const input = stationInput.value.toLowerCase();
+	filteredStations.value = stationsList.filter(station =>
+		station.toLowerCase().includes(input)
+	);
+};
+
+const selectStation = (station) => {
+	stationInput.value = station;
+	filteredStations.value = [];
+};
 
 // Methods
 const setEnqueteur = () => {
@@ -242,12 +263,22 @@ const handleFreeTextAnswer = () => {
 };
 
 const handleStationSelection = () => {
-	if (selectedStation.value) {
-		answers.value['Q5'] = selectedStation.value;
+	if (stationInput.value.trim() !== '') {
+		const isListedStation = stationsList.includes(stationInput.value);
+		answers.value['Q5'] = stationInput.value;
+		if (!isListedStation) {
+			answers.value['Q5_CUSTOM'] = stationInput.value;
+		}
 		nextQuestion();
-		selectedStation.value = ''; // Reset selection for next use
+		stationInput.value = ''; // Reset input for next use
+		filteredStations.value = []; // Clear filtered list
 	}
 };
+
+// Add this watch
+watch(stationInput, () => {
+	filterStations();
+});
 
 const updateSelectedCommune = (value) => {
 	selectedCommune.value = value;
@@ -537,6 +568,21 @@ h2 {
 	height: 100%;
 	background-color: #4caf50;
 	transition: width 0.3s ease-in-out;
+}
+
+.commune-dropdown {
+	max-height: 200px;
+	overflow-y: auto;
+	border: 1px solid #ccc;
+}
+
+.commune-option {
+	padding: 5px;
+	cursor: pointer;
+}
+
+.commune-option:hover {
+	background-color: #f0f0f0;
 }
 
 @media screen and (max-width: 768px) {

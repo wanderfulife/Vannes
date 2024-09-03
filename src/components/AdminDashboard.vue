@@ -62,6 +62,20 @@ const totalSurveys = ref(0);
 
 const surveyCollectionRef = collection(db, "Vannes");
 
+// Stations list
+const stationsList = [
+	'Brest', 'Kerhuon', 'La Forest-Landerneau', 'Landerneau', 'Dirinon',
+	'Pont-de-Buis', 'Châteaulin', 'Quimper', 'Rosporden', 'Bannalec',
+	'Quimperlé', 'Gestel', 'Lorient', 'Hennebont', 'Brandérion',
+	'Landévant', 'Landaul – Mendon', 'Auray', 'Sainte-Anne',
+	'Questembert', 'Malansac', 'Redon', 'Séverac', 'Saint-Gildas-des-Bois',
+	'Drefféac', 'Pontchâteau', 'Savenay', 'Cordemais', 'Saint-Etienne-de-Montluc',
+	'Couëron', 'Basse Indre – Saint-Herblain', 'Chantenay', 'Nantes', 'Masserac',
+	'Beslé', 'Fougeray-Langon', 'Messac-Guipry', 'Pléchâtel', 'Saint-Senoux-Pléchâtel',
+	'Guichen-Bourg-des-Comptes', 'Laillé', 'Bruz', 'Ker Lann', 'Saint-Jacques-de-la-Lande',
+	'Rennes', 'Laval', 'Le Mans', 'Massy TGV', 'Paris Montparnasse'
+];
+
 const signIn = () => {
 	if (password.value === 'admin123') {
 		showSignInModal.value = false;
@@ -130,6 +144,7 @@ const downloadData = async () => {
 			'Q3_autre',
 			'Q4',
 			'Q5',
+			'Q5_Free', // Add this new field
 			'Q6',
 			'Q6_precision',
 			'Q6a',
@@ -167,6 +182,10 @@ const downloadData = async () => {
 					case 'CODE_INSEE':
 						// Only fill if a commune was selected from the list
 						acc[key] = docData['COMMUNE_LIBRE'] ? '' : (docData[key] || '');
+						break;
+					case 'Q5_Free':
+						// Only fill if Q5 is not in the predefined list
+						acc[key] = stationsList.includes(docData['Q5']) ? '' : (docData['Q5'] || '');
 						break;
 					default:
 						acc[key] = docData[key] || '';
