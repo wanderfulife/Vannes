@@ -1,8 +1,9 @@
 <!-- CommuneSelector.vue -->
 <template>
   <div class="form-group">
-    <input class="form-control" type="text" v-model="searchTerm" @input="search"
-      placeholder="Rechercher ou saisir une commune" />
+    <input class="form-control" type="text" v-model="postalCodeInput" @input="search"
+      placeholder="Code postal (ex: 92, 54)" />
+    <input class="form-control" type="text" v-model="communeInput" @input="search" placeholder="Nom de la commune" />
     <div v-if="showDropdown" class="commune-dropdown">
       <div v-for="item in filteredCommunes" :key="item['CODE INSEE']" @click="selectCommune(item)"
         class="commune-option">
@@ -14,6 +15,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue';
+
 const insee = ref([]);
 
 onMounted(async () => {
@@ -32,12 +34,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'update:postalCodePrefix']);
 
-const searchTerm = ref('');
+const postalCodeInput = ref('');
+const communeInput = ref('');
 const showDropdown = ref(false);
 const filteredCommunes = ref([]);
 
 const search = () => {
-  if (searchTerm.value.length < 2 || !insee.value.length) {
+  if ((postalCodeInput.value.length < 2 && communeInput.value.length < 2) || !insee.value.length) {
     showDropdown.value = false;
     return;
   }
@@ -48,35 +51,39 @@ const search = () => {
     const commune = item.COMMUNE ? item.COMMUNE.toLowerCase() : '';
     const postalCode = item['CODE POSTAL'] ? item['CODE POSTAL'].toString() : '';
 
-    return commune.includes(searchTerm.value.toLowerCase()) ||
-      postalCode.startsWith(searchTerm.value);
+    const postalCodeMatch = postalCode.startsWith(postalCodeInput.value);
+    const communeMatch = commune.includes(communeInput.value.toLowerCase());
+
+    return postalCodeMatch && communeMatch;
   }).slice(0, 100);
 
   showDropdown.value = filteredCommunes.value.length > 0;
 
-  // Emit the current search term as the selected value
-  emit('update:modelValue', searchTerm.value);
+  // Emit the current inputs as the selected values
+  emit('update:modelValue', `${communeInput.value}`);
+  emit('update:postalCodePrefix', postalCodeInput.value);
 };
 
 const selectCommune = (item) => {
   if (item && item.COMMUNE && item['CODE INSEE']) {
-    searchTerm.value = item.COMMUNE;
+    communeInput.value = item.COMMUNE;
+    postalCodeInput.value = item['CODE POSTAL'] ? item['CODE POSTAL'].toString() : '';
     emit('update:modelValue', `${item.COMMUNE} - ${item['CODE INSEE']}`);
-    emit('update:postalCodePrefix', item['CODE POSTAL'] ? item['CODE POSTAL'].toString() : '');
+    emit('update:postalCodePrefix', postalCodeInput.value);
     showDropdown.value = false;
   }
 };
 
 watch(() => props.modelValue, (newVal) => {
-  if (newVal && newVal !== searchTerm.value) {
+  if (newVal) {
     const [commune] = newVal.split(' - ');
-    searchTerm.value = commune || newVal;
+    communeInput.value = commune || newVal;
   }
 });
 
 watch(() => props.postalCodePrefix, (newVal) => {
-  if (newVal && newVal !== searchTerm.value) {
-    searchTerm.value = newVal;
+  if (newVal && newVal !== postalCodeInput.value) {
+    postalCodeInput.value = newVal;
     search();
   }
 });
@@ -96,5 +103,9 @@ watch(() => props.postalCodePrefix, (newVal) => {
 
 .commune-option:hover {
   background-color: #f0f0f0;
+}
+
+.form-control {
+  margin-bottom: 10px;
 }
 </style>
